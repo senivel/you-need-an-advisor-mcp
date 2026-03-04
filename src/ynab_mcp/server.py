@@ -1069,5 +1069,151 @@ async def delete_transaction(
     return _format_transaction_confirmation("deleted", txn)
 
 
+def _format_batch_result(data: dict, verb: str) -> str:
+    """Format a batch transaction create/update response.
+
+    Args:
+        data: Response dict from the YNAB API with transaction_ids
+            and optionally duplicate_import_ids.
+        verb: Action word ("created" or "updated").
+
+    Returns:
+        Summary string with count header, per-ID lines, and duplicate IDs.
+    """
+    txn_ids = data.get("transaction_ids", [])
+    count = len(txn_ids)
+    noun = "transaction" if count == 1 else "transactions"
+    lines = [f"{count} {noun} {verb}:"]
+    lines.extend(f"  - {txn_id}" for txn_id in txn_ids)
+
+    dup_ids = data.get("duplicate_import_ids", [])
+    if dup_ids:
+        lines.append(f"\n{len(dup_ids)} duplicate(s) skipped:")
+        lines.extend(f"  - {dup_id}" for dup_id in dup_ids)
+
+    return "\n".join(lines)
+
+
+@mcp.tool
+async def batch_create_transactions(
+    ctx: Context,
+    transactions: list[dict],
+    budget_id_or_name: str = "last-used",
+) -> str:
+    """Create multiple YNAB transactions in a single API call.
+
+    Each transaction dict should contain fields matching the YNAB API
+    (account_id, date, amount, etc.). Dollar amounts in ``amount``
+    fields are automatically converted to milliunits.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        transactions: List of transaction dicts to create.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+
+    Returns:
+        Summary with count of created transactions and their IDs.
+
+    Raises:
+        ToolError: If transactions list is empty.
+    """
+    if not transactions:
+        msg = "Transactions list must not be empty."
+        raise ToolError(msg)
+
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    processed = []
+    for txn in transactions:
+        txn_copy = dict(txn)
+        if "amount" in txn_copy:
+            txn_copy["amount"] = dollars_to_milliunits(txn_copy["amount"])
+        processed.append(txn_copy)
+
+    data = await app.client.post(
+        f"/budgets/{budget_id}/transactions",
+        json={"transactions": processed},
+    )
+    return _format_batch_result(data, "created")
+
+
+@mcp.tool
+async def batch_update_transactions(
+    ctx: Context,
+    transactions: list[dict],
+    budget_id_or_name: str = "last-used",
+) -> str:
+    """Update multiple YNAB transactions in a single API call.
+
+    Each transaction dict must include an ``id`` field. Dollar amounts
+    in ``amount`` fields are automatically converted to milliunits.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        transactions: List of transaction dicts with IDs to update.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+
+    Returns:
+        Summary with count of updated transactions and their IDs.
+
+    Raises:
+        ToolError: If transactions list is empty.
+    """
+    if not transactions:
+        msg = "Transactions list must not be empty."
+        raise ToolError(msg)
+
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    processed = []
+    for txn in transactions:
+        txn_copy = dict(txn)
+        if "amount" in txn_copy:
+            txn_copy["amount"] = dollars_to_milliunits(txn_copy["amount"])
+        processed.append(txn_copy)
+
+    data = await app.client.patch(
+        f"/budgets/{budget_id}/transactions",
+        json={"transactions": processed},
+    )
+    return _format_batch_result(data, "updated")
+
+
+@mcp.tool
+async def import_transactions(
+    ctx: Context,
+    budget_id_or_name: str = "last-used",
+) -> str:
+    """Trigger import of transactions from linked accounts.
+
+    Calls the YNAB import endpoint which pulls transactions from
+    linked financial institutions. Returns the count and IDs of
+    newly imported transactions.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+
+    Returns:
+        Summary of imported transactions, or message if none imported.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    data = await app.client.post(f"/budgets/{budget_id}/transactions/import")
+    txn_ids = data.get("transaction_ids", [])
+
+    if not txn_ids:
+        return "No transactions to import."
+
+    count = len(txn_ids)
+    noun = "transaction" if count == 1 else "transactions"
+    lines = [f"{count} {noun} imported:"]
+    lines.extend(f"  - {txn_id}" for txn_id in txn_ids)
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     mcp.run()
