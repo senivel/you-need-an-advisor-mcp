@@ -1,0 +1,3 @@
+# Architecture
+
+Internal architecture overview.
