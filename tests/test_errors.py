@@ -2,8 +2,6 @@
 
 from ynab_mcp.errors import YNABAPIError, format_error
 
-from tests.conftest import mock_ynab_error_response
-
 
 class TestYNABAPIError:
     """Tests for YNABAPIError exception class."""
@@ -58,7 +56,7 @@ class TestFormatError:
     """Tests for format_error function."""
 
     def test_404_produces_resource_not_found_message(self):
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=404,
             error_id="404.2",
             name="resource_not_found",
@@ -71,7 +69,7 @@ class TestFormatError:
         )
 
     def test_429_produces_rate_limit_message_with_retry_hint(self):
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=429,
             error_id="429",
             name="too_many_requests",
@@ -84,7 +82,7 @@ class TestFormatError:
         assert "(too_many_requests)" in result
 
     def test_5xx_produces_server_error_message_with_retry_hint(self):
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=500,
             error_id="500",
             name="internal_server_error",
@@ -96,7 +94,7 @@ class TestFormatError:
         assert "(internal_server_error)" in result
 
     def test_503_also_produces_server_error_message(self):
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=503,
             error_id="503",
             name="service_unavailable",
@@ -107,7 +105,7 @@ class TestFormatError:
         assert "try again" in result.lower()
 
     def test_400_user_error_produces_detail_with_name(self):
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=400,
             error_id="400",
             name="bad_request",
@@ -118,7 +116,7 @@ class TestFormatError:
 
     def test_user_errors_guide_correction_not_blame_server(self):
         """User errors (4xx) should not say 'not your fault'."""
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=400,
             error_id="400",
             name="bad_request",
@@ -129,7 +127,7 @@ class TestFormatError:
 
     def test_api_errors_clarify_not_users_fault(self):
         """API errors (5xx) should clarify it's not the user's fault."""
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=502,
             error_id="502",
             name="bad_gateway",
@@ -140,7 +138,7 @@ class TestFormatError:
 
     def test_format_error_returns_string(self):
         """format_error should return a string, not raise."""
-        error = mock_ynab_error_response(
+        error = YNABAPIError(
             status_code=404,
             error_id="404.2",
             name="resource_not_found",

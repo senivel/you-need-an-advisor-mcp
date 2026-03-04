@@ -1,32 +1,6 @@
 """Shared test fixtures for YNAB MCP server tests."""
 
 import pytest
-from ynab_mcp.errors import YNABAPIError
-
-
-def mock_ynab_error_response(
-    status_code: int,
-    error_id: str,
-    name: str,
-    detail: str,
-) -> YNABAPIError:
-    """Factory for creating YNABAPIError instances in tests.
-
-    Args:
-        status_code: HTTP status code.
-        error_id: YNAB error ID (e.g., "404.2").
-        name: YNAB error name (e.g., "resource_not_found").
-        detail: Human-readable error detail.
-
-    Returns:
-        A configured YNABAPIError instance.
-    """
-    return YNABAPIError(
-        status_code=status_code,
-        error_id=error_id,
-        name=name,
-        detail=detail,
-    )
 
 
 @pytest.fixture
