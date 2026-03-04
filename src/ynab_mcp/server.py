@@ -707,5 +707,134 @@ async def month_category_budget(
     )
 
 
+_CLEARED_INDICATORS: dict[str, str] = {
+    "cleared": "[C]",
+    "uncleared": "[U]",
+    "reconciled": "[R]",
+}
+"""Compact status indicators for transaction list view."""
+
+
+def _format_transaction_line(txn: dict) -> list[str]:
+    """Format a single transaction for list view.
+
+    Each transaction produces two lines: a summary line with date, payee,
+    amount, category, and cleared status, followed by the transaction ID.
+
+    Args:
+        txn: Transaction dict from the YNAB API response.
+
+    Returns:
+        Two-element list: summary line and ID line.
+    """
+    status = _CLEARED_INDICATORS.get(txn.get("cleared", ""), "")
+    payee = txn.get("payee_name") or "(no payee)"
+    category = txn.get("category_name") or "(no category)"
+    amount = format_dollars(txn["amount"])
+    return [
+        f"- {txn['date']} | {payee} | {amount} | {category} {status}",
+        f"  ID: {txn['id']}",
+    ]
+
+
+@mcp.tool
+async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
+    ctx: Context,
+    budget_id_or_name: str = "last-used",
+    since_date: str | None = None,
+    until_date: str | None = None,
+    type: str | None = None,  # noqa: A002
+    account_id: str | None = None,
+    category_id: str | None = None,
+    payee_id: str | None = None,
+    month: str | None = None,
+    limit: int | None = None,
+) -> str:
+    """List transactions in a YNAB budget with optional filtering.
+
+    Routes to different YNAB API endpoints based on which filter param
+    is provided. Only one of ``account_id``, ``category_id``, ``payee_id``,
+    or ``month`` may be specified at a time.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        since_date: Only return transactions on or after this date (ISO).
+        until_date: Only return transactions on or before this date (ISO,
+            applied client-side).
+        type: Filter by transaction type ("uncategorized" or "unapproved").
+        account_id: Filter by account (routes to account transactions endpoint).
+        category_id: Filter by category (routes to category transactions endpoint).
+        payee_id: Filter by payee (routes to payee transactions endpoint).
+        month: Filter by month (routes to month transactions endpoint).
+        limit: Maximum number of transactions to return.
+
+    Returns:
+        Structured text with count header and transaction lines,
+        or "No transactions found." if none match.
+
+    Raises:
+        ToolError: If more than one filter param is provided.
+    """
+    # Validate mutual exclusivity
+    filters = [account_id, category_id, payee_id, month]
+    active_filters = sum(1 for f in filters if f is not None)
+    if active_filters > 1:
+        msg = (
+            "Only one filter (account, category, payee, or month) "
+            "can be used at a time."
+        )
+        raise ToolError(msg)
+
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    # Determine API path based on filter
+    if account_id:
+        path = f"/budgets/{budget_id}/accounts/{account_id}/transactions"
+    elif category_id:
+        path = f"/budgets/{budget_id}/categories/{category_id}/transactions"
+    elif payee_id:
+        path = f"/budgets/{budget_id}/payees/{payee_id}/transactions"
+    elif month:
+        normalized = normalize_month(month)
+        path = f"/budgets/{budget_id}/months/{normalized}/transactions"
+    else:
+        path = f"/budgets/{budget_id}/transactions"
+
+    # Build query params
+    params: dict[str, str] = {}
+    if since_date:
+        params["since_date"] = since_date
+    if type:
+        params["type"] = type
+
+    data = await app.client.get(path, params=params)
+    transactions = data["transactions"]
+
+    # Client-side until_date filter
+    if until_date:
+        transactions = [t for t in transactions if t["date"] <= until_date]
+
+    if not transactions:
+        return "No transactions found."
+
+    total = len(transactions)
+
+    # Apply limit
+    if limit and total > limit:
+        header = f"Showing {limit} of {total} transactions:"
+        transactions = transactions[:limit]
+    else:
+        noun = "transaction" if total == 1 else "transactions"
+        header = f"{total} {noun} found:"
+
+    lines = [header]
+    for txn in transactions:
+        lines.extend(_format_transaction_line(txn))
+
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     mcp.run()
