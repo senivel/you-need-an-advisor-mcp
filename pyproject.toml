@@ -1,0 +1,83 @@
+[project]
+name = "ynab-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [{ name = "Alex Levine", email = "awlevine@pm.me" }]
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+show-fixes = true
+unsafe-fixes = true
+preview = true
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = ["W292"]
+select = ["ALL"]
+ignore = [
+  ## disabled linters
+  "S",   # flake8-bandit
+  "CPY", # flake8-copyright
+  "DJ",  # flake8-django
+  "TD",  # flake8-todo
+  "FIX", # flake8-fixme
+  "AIR", # airflow
+
+  ## disabled rules
+  "COM812", # trailing comma
+  "DTZ005", # call datetime.now() without tz
+  "ISC001", # implicit single line str concat
+  "PD901",  # avoid using df as a variable for DataFrames
+  "TRY003", # long messages outside exception class
+  "D203",   # 1 blank line required before class docstring
+  "D213",   # Multi-line docstring summary should start at the second line
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = ["F401"]
+"tests/**.py" = ["ANN", "PLR6301"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+skip-magic-trailing-comma = false
+
+[tool.coverage.run]
+branch = true
+omit = ["**/__init__.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = ["pragma: no cover", "pass", "raise NotImplementedError"]
+
+[tool.pytest.ini_options]
+addopts = "-rsxXE --tb=short --strict-markers --cov --cov-append --disable-socket"
+xfail_strict = true
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "pytest-clarity>=1.0.1",
+    "pytest-cov>=7.0.0",
+    "pytest-icdiff>=0.9",
+    "pytest-mock>=3.15.1",
+    "pytest-socket>=0.7.0",
+    "pytest-sugar>=1.1.1",
+    "ruff>=0.15.4",
+]
