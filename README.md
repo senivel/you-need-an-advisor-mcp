@@ -39,7 +39,7 @@ Add this to your Claude Desktop config (`claude_desktop_config.json`):
       "command": "uv",
       "args": ["run", "--directory", "/path/to/ynab-mcp", "ynab-mcp"],
       "env": {
-        "YNAB_API_TOKEN": "your-token-here"
+        "YNAB_PAT": "your-token-here"
       }
     }
   }
