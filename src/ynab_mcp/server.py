@@ -234,6 +234,7 @@ async def get_accounts(
     for a in accounts:
         lines.extend((
             f"- {a['name']}",
+            f"  ID: {a['id']}",
             f"  Type: {a['type']}",
             f"  Balance: {format_dollars(a['balance'])}",
         ))
@@ -401,7 +402,7 @@ async def get_categories(
             continue
 
         total_count += len(cats)
-        lines.append(f"\n{group['name']}")
+        lines.append(f"\n{group['name']} (ID: {group['id']})")
         for cat in cats:
             budget_line = (
                 f"    Budgeted: {format_dollars(cat['budgeted'])} | "
@@ -410,6 +411,7 @@ async def get_categories(
             )
             lines.extend((
                 f"  - {cat['name']}",
+                f"    ID: {cat['id']}",
                 budget_line,
             ))
 
