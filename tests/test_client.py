@@ -1,7 +1,6 @@
 """Tests for YNABClient with mocked httpx and rate limiter."""
 
 import inspect
-from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
@@ -14,25 +13,25 @@ from ynab_mcp.rate_limiter import RateLimiter
 
 
 @pytest.fixture
-def mock_rate_limiter():
+def mock_rate_limiter(mocker):
     """Create a mock rate limiter that allows all requests.
 
     Returns:
         A MagicMock with spec=RateLimiter, pre-configured to allow.
     """
-    limiter = MagicMock(spec=RateLimiter)
+    limiter = mocker.MagicMock(spec=RateLimiter)
     limiter.check.return_value = (True, 0, None)
     return limiter
 
 
 @pytest.fixture
-def mock_http_client():
+def mock_http_client(mocker):
     """Create a mock httpx.AsyncClient.
 
     Returns:
         An AsyncMock with spec=httpx.AsyncClient.
     """
-    return AsyncMock(spec=httpx.AsyncClient)
+    return mocker.AsyncMock(spec=httpx.AsyncClient)
 
 
 def _make_response(

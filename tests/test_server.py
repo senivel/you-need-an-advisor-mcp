@@ -2,7 +2,6 @@
 
 import ast
 import inspect
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -17,81 +16,75 @@ class TestLifespanStartup:
     async def test_missing_pat_raises_runtime_error(self, monkeypatch):
         """Missing YNAB_PAT env var causes startup failure."""
         monkeypatch.delenv("YNAB_PAT", raising=False)
-        mock_server = AsyncMock()
+        mock_server = None  # lifespan should fail before using this
 
         with pytest.raises(RuntimeError, match="YNAB_PAT"):
             async with lifespan(mock_server):
                 pass
 
     @pytest.mark.anyio
-    async def test_invalid_pat_raises_on_validation(self, monkeypatch):
+    async def test_invalid_pat_raises_on_validation(self, monkeypatch, mocker):
         """Invalid PAT (validate_token fails) causes startup failure."""
         monkeypatch.setenv("YNAB_PAT", "invalid-token")
-        mock_server = AsyncMock()
 
-        with (
-            patch("ynab_mcp.server.httpx.AsyncClient") as mock_http_cls,
-            patch.object(
-                YNABClient,
-                "validate_token",
-                side_effect=RuntimeError("auth failed"),
-            ),
-        ):
-            mock_http_instance = AsyncMock()
-            mock_http_cls.return_value.__aenter__ = AsyncMock(
-                return_value=mock_http_instance,
-            )
-            mock_http_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_instance = mocker.AsyncMock()
+        mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
+            return_value=mock_http_instance,
+        )
+        mock_http_cls.return_value.__aexit__ = mocker.AsyncMock(return_value=False)
 
-            with pytest.raises(RuntimeError, match="auth failed"):
-                async with lifespan(mock_server):
-                    pass
+        mocker.patch.object(
+            YNABClient,
+            "validate_token",
+            side_effect=RuntimeError("auth failed"),
+        )
+
+        with pytest.raises(RuntimeError, match="auth failed"):
+            async with lifespan(mocker.AsyncMock()):
+                pass
 
     @pytest.mark.anyio
-    async def test_valid_pat_yields_app_context(self, monkeypatch):
+    async def test_valid_pat_yields_app_context(self, monkeypatch, mocker):
         """Valid PAT allows lifespan to complete and yield AppContext."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
-        mock_server = AsyncMock()
 
-        with (
-            patch("ynab_mcp.server.httpx.AsyncClient") as mock_http_cls,
-            patch.object(
-                YNABClient,
-                "validate_token",
-                return_value="user-id-abc",
-            ),
-        ):
-            mock_http_instance = AsyncMock()
-            mock_http_cls.return_value.__aenter__ = AsyncMock(
-                return_value=mock_http_instance,
-            )
-            mock_http_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_instance = mocker.AsyncMock()
+        mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
+            return_value=mock_http_instance,
+        )
+        mock_http_cls.return_value.__aexit__ = mocker.AsyncMock(return_value=False)
 
-            async with lifespan(mock_server) as ctx:
-                assert isinstance(ctx, AppContext)
+        mocker.patch.object(
+            YNABClient,
+            "validate_token",
+            return_value="user-id-abc",
+        )
+
+        async with lifespan(mocker.AsyncMock()) as ctx:
+            assert isinstance(ctx, AppContext)
 
     @pytest.mark.anyio
-    async def test_app_context_client_is_ynab_client(self, monkeypatch):
+    async def test_app_context_client_is_ynab_client(self, monkeypatch, mocker):
         """AppContext.client is a YNABClient instance."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
-        mock_server = AsyncMock()
 
-        with (
-            patch("ynab_mcp.server.httpx.AsyncClient") as mock_http_cls,
-            patch.object(
-                YNABClient,
-                "validate_token",
-                return_value="user-id-abc",
-            ),
-        ):
-            mock_http_instance = AsyncMock()
-            mock_http_cls.return_value.__aenter__ = AsyncMock(
-                return_value=mock_http_instance,
-            )
-            mock_http_cls.return_value.__aexit__ = AsyncMock(return_value=False)
+        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_instance = mocker.AsyncMock()
+        mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
+            return_value=mock_http_instance,
+        )
+        mock_http_cls.return_value.__aexit__ = mocker.AsyncMock(return_value=False)
 
-            async with lifespan(mock_server) as ctx:
-                assert isinstance(ctx.client, YNABClient)
+        mocker.patch.object(
+            YNABClient,
+            "validate_token",
+            return_value="user-id-abc",
+        )
+
+        async with lifespan(mocker.AsyncMock()) as ctx:
+            assert isinstance(ctx.client, YNABClient)
 
 
 class TestServerCompliance:

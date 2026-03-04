@@ -28,6 +28,12 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget). Python 3.13+, 
 
 - Prefer the Context7 MCP (`resolve-library-id` → `query-docs`) over web search when looking up library or framework documentation. Fall back to web search only if Context7 lacks coverage for the library in question.
 
+## Testing Conventions
+
+- **pytest-mock over unittest.mock** — use the `mocker` fixture instead of `from unittest.mock import patch/MagicMock/AsyncMock`. pytest-mock auto-cleans and is more pytest-idiomatic.
+- **freezegun for wall-clock time** — use `@freeze_time` for tests involving `datetime.now()`, `date.today()`, or `time.time()`. Not applicable to `time.monotonic()` (use `mocker.patch` for monotonic).
+- **Hypothesis for property-based tests** — use `@given` with strategies for functions with well-defined input/output contracts (converters, validators, parsers). Complements example-based tests, doesn't replace them.
+
 ## Project Structure
 
 - `src/ynab_mcp/` — main package (src layout)

@@ -41,8 +41,8 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = ["F401"]
-"tests/**.py" = ["ANN", "PLR2004", "PLR6301"]
+"**/__init__.py" = ["D104", "F401"]
+"tests/**.py" = ["ANN", "D102", "PLR2004", "PLR6301", "RUF069"]
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
@@ -70,6 +70,8 @@ xfail_strict = true
 
 [dependency-groups]
 dev = [
+  "freezegun>=1.5.5",
+  "hypothesis>=6.151.9",
   "pre-commit>=4.5.1",
   "pytest>=9.0.2",
   "pytest-clarity>=1.0.1",

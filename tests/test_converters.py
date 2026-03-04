@@ -1,5 +1,9 @@
 """Tests for milliunit/dollar conversion and base Pydantic models."""
 
+import pytest
+from hypothesis import given
+from hypothesis import strategies as st
+
 from ynab_mcp.converters import dollars_to_milliunits, milliunits_to_dollars
 from ynab_mcp.models import BudgetsResponse, BudgetSummary, ErrorDetail, ErrorResponse
 
@@ -39,6 +43,64 @@ class TestDollarsToMilliunits:
     def test_float_precision_edge_case(self):
         """0.1 + 0.2 should convert to 300, not 299 or 301."""
         assert dollars_to_milliunits(0.1 + 0.2) == 300
+
+
+class TestConversionProperties:
+    """Hypothesis property-based tests for conversion roundtrip invariants."""
+
+    @given(
+        milliunits=st.integers(
+            min_value=-999_999_999_999,
+            max_value=999_999_999_999,
+        ),
+    )
+    def test_roundtrip_milliunits_to_dollars_and_back(self, milliunits):
+        """Converting milliunits -> dollars -> milliunits is identity."""
+        dollars = milliunits_to_dollars(milliunits)
+        result = dollars_to_milliunits(dollars)
+        assert result == milliunits
+
+    @given(
+        dollars=st.decimals(
+            min_value=-999_999_999,
+            max_value=999_999_999,
+            places=3,
+            allow_nan=False,
+            allow_infinity=False,
+        ).map(float),
+    )
+    def test_dollars_to_milliunits_produces_integer(self, dollars):
+        """dollars_to_milliunits always returns an int."""
+        result = dollars_to_milliunits(dollars)
+        assert isinstance(result, int)
+
+    @given(
+        milliunits=st.integers(
+            min_value=-999_999_999_999,
+            max_value=999_999_999_999,
+        ),
+    )
+    def test_sign_preserved_through_conversion(self, milliunits):
+        """Sign is preserved: positive milliunits -> positive dollars, etc."""
+        dollars = milliunits_to_dollars(milliunits)
+        if milliunits > 0:
+            assert dollars > 0
+        elif milliunits < 0:
+            assert dollars < 0
+        else:
+            assert dollars == pytest.approx(0.0)
+
+    @given(
+        milliunits=st.integers(
+            min_value=0,
+            max_value=999_999_999_999,
+        ),
+    )
+    def test_conversion_maintains_ordering(self, milliunits):
+        """Larger milliunits always produce larger or equal dollar amounts."""
+        dollars_low = milliunits_to_dollars(milliunits)
+        dollars_high = milliunits_to_dollars(milliunits + 1)
+        assert dollars_high >= dollars_low
 
 
 class TestBudgetSummaryModel:
