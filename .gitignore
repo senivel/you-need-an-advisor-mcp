@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # MCP servers
 .codegraph/
+
+# Node
+./**/node_modules/
