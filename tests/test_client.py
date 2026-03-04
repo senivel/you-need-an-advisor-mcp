@@ -243,6 +243,87 @@ class TestPatchMethod:
         assert result["category"]["id"] == "cat-001"
 
 
+class TestPutMethod:
+    """Tests for client.put() method."""
+
+    @pytest.mark.anyio
+    async def test_put_delegates_to_request(self, client, mock_http_client):
+        """put() sends a PUT request through request()."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"transaction": {"id": "txn-001", "amount": 50.0}}},
+        )
+
+        result = await client.put(
+            "/budgets/x/transactions/txn-001",
+            json={"transaction": {"amount": 50000}},
+        )
+
+        mock_http_client.request.assert_called_once()
+        call_args = mock_http_client.request.call_args
+        assert call_args[0][0] == "PUT"
+        assert call_args[0][1] == "/budgets/x/transactions/txn-001"
+        assert result["transaction"]["id"] == "txn-001"
+
+    @pytest.mark.anyio
+    async def test_put_passes_kwargs(self, client, mock_http_client):
+        """put() forwards keyword arguments to request()."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"transaction": {"id": "txn-001"}}},
+        )
+
+        await client.put(
+            "/budgets/x/transactions/txn-001",
+            json={"transaction": {"memo": "Updated"}},
+        )
+
+        call_kwargs = mock_http_client.request.call_args[1]
+        assert call_kwargs["json"] == {"transaction": {"memo": "Updated"}}
+
+    @pytest.mark.anyio
+    async def test_put_is_async(self, client):
+        """put() is a coroutine function."""
+        assert inspect.iscoroutinefunction(client.put)
+
+
+class TestDeleteMethod:
+    """Tests for client.delete() method."""
+
+    @pytest.mark.anyio
+    async def test_delete_delegates_to_request(self, client, mock_http_client):
+        """delete() sends a DELETE request through request()."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"transaction": {"id": "txn-001", "deleted": True}}},
+        )
+
+        result = await client.delete("/budgets/x/transactions/txn-001")
+
+        mock_http_client.request.assert_called_once()
+        call_args = mock_http_client.request.call_args
+        assert call_args[0][0] == "DELETE"
+        assert call_args[0][1] == "/budgets/x/transactions/txn-001"
+        assert result["transaction"]["deleted"] is True
+
+    @pytest.mark.anyio
+    async def test_delete_passes_kwargs(self, client, mock_http_client):
+        """delete() forwards keyword arguments to request()."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"transaction": {"id": "txn-001"}}},
+        )
+
+        await client.delete(
+            "/budgets/x/transactions/txn-001",
+            params={"force": "true"},
+        )
+
+        call_kwargs = mock_http_client.request.call_args[1]
+        assert call_kwargs["params"] == {"force": "true"}
+
+    @pytest.mark.anyio
+    async def test_delete_is_async(self, client):
+        """delete() is a coroutine function."""
+        assert inspect.iscoroutinefunction(client.delete)
+
+
 class TestStdoutCompliance:
     """Tests for INFR-08: no stdout writes."""
 
