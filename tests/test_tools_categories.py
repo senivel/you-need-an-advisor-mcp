@@ -1,8 +1,14 @@
-"""Tests for category tools: get_categories, get_category."""
+"""Tests for category tools."""
 
 import pytest
+from fastmcp.exceptions import ToolError
 
-from ynab_mcp.server import get_categories, get_category
+from ynab_mcp.server import (
+    get_categories,
+    get_category,
+    manage_category,
+    manage_category_group,
+)
 
 
 @pytest.fixture
@@ -308,3 +314,179 @@ class TestGetCategory:
         result = await get_category(mock_ctx, category_id="cat-1")
 
         assert "Goal" not in result
+
+
+class TestManageCategory:
+    """Tests for manage_category tool."""
+
+    @pytest.mark.anyio
+    async def test_manage_category_create(self, mock_ctx, mocker):
+        """POST body correct, confirmation format."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "category": {
+                "id": "new-cat-1",
+                "name": "Subscriptions",
+                "category_group_id": "group-1",
+                "budgeted": 0.0,
+                "activity": 0.0,
+                "balance": 0.0,
+            }
+        }
+
+        result = await manage_category(
+            mock_ctx, name="Subscriptions", category_group_id="group-1"
+        )
+
+        assert "Category created" in result
+        assert "Subscriptions" in result
+        mock_ctx.lifespan_context.client.post.assert_called_once()
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        assert call_args[0][0] == "/budgets/budget-123/categories"
+        body = call_args[1]["json"]
+        assert body["category"]["name"] == "Subscriptions"
+        assert body["category"]["category_group_id"] == "group-1"
+
+    @pytest.mark.anyio
+    async def test_manage_category_create_with_goal(self, mock_ctx, mocker):
+        """goal_target converted to milliunits in POST body."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "category": {
+                "id": "new-cat-2",
+                "name": "Savings",
+                "budgeted": 0.0,
+                "activity": 0.0,
+                "balance": 0.0,
+            }
+        }
+
+        result = await manage_category(mock_ctx, name="Savings", goal_target=500.0)
+
+        assert "Category created" in result
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        body = call_args[1]["json"]
+        assert body["category"]["goal_target"] == 500000
+
+    @pytest.mark.anyio
+    async def test_manage_category_update(self, mock_ctx, mocker):
+        """PATCH body only includes provided fields, category_id in path."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category": {
+                "id": "cat-1",
+                "name": "Rent Updated",
+                "budgeted": 1500.0,
+                "activity": -1500.0,
+                "balance": 0.0,
+            }
+        }
+
+        result = await manage_category(
+            mock_ctx, name="Rent Updated", category_id="cat-1"
+        )
+
+        assert "Category updated" in result
+        assert "Rent Updated" in result
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        assert call_args[0][0] == "/budgets/budget-123/categories/cat-1"
+        body = call_args[1]["json"]
+        assert body["category"]["name"] == "Rent Updated"
+        # note and goal_target should not be in body (not provided)
+        assert "note" not in body["category"]
+        assert "goal_target" not in body["category"]
+
+    @pytest.mark.anyio
+    async def test_manage_category_update_goal_conversion(self, mock_ctx, mocker):
+        """goal_target converted from dollars to milliunits in PATCH."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category": {
+                "id": "cat-1",
+                "name": "Savings",
+                "budgeted": 0.0,
+                "activity": 0.0,
+                "balance": 0.0,
+            }
+        }
+
+        await manage_category(
+            mock_ctx, name="Savings", category_id="cat-1", goal_target=250.50
+        )
+
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        body = call_args[1]["json"]
+        assert body["category"]["goal_target"] == 250500
+
+
+class TestManageCategoryGroup:
+    """Tests for manage_category_group tool."""
+
+    @pytest.mark.anyio
+    async def test_manage_category_group_create(self, mock_ctx, mocker):
+        """POST body correct, confirmation format."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "category_group": {
+                "id": "new-group-1",
+                "name": "Investments",
+            }
+        }
+
+        result = await manage_category_group(mock_ctx, name="Investments")
+
+        assert "Category group created" in result
+        assert "Investments" in result
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        assert call_args[0][0] == "/budgets/budget-123/category_groups"
+        body = call_args[1]["json"]
+        assert body["category_group"]["name"] == "Investments"
+
+    @pytest.mark.anyio
+    async def test_manage_category_group_create_name_too_long(self, mock_ctx, mocker):
+        """ToolError raised for name > 50 chars."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="50 characters"):
+            await manage_category_group(mock_ctx, name="A" * 51)
+
+    @pytest.mark.anyio
+    async def test_manage_category_group_update(self, mock_ctx, mocker):
+        """PATCH body correct, confirmation, category_group_id in path."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category_group": {
+                "id": "group-1",
+                "name": "Fixed Costs",
+            }
+        }
+
+        result = await manage_category_group(
+            mock_ctx, name="Fixed Costs", category_group_id="group-1"
+        )
+
+        assert "Category group updated" in result
+        assert "Fixed Costs" in result
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        assert call_args[0][0] == "/budgets/budget-123/category_groups/group-1"

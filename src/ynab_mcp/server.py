@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 import httpx
 from fastmcp import Context, FastMCP
+from fastmcp.exceptions import ToolError
 
 from ynab_mcp.budget_resolver import resolve_budget
 from ynab_mcp.client import YNABClient
@@ -507,6 +508,138 @@ async def get_category(
     if info:
         result = f"{info}\n\n{result}"
     return result
+
+
+_MAX_GROUP_NAME_LENGTH = 50
+"""Maximum character length for a category group name."""
+
+
+@mcp.tool
+async def manage_category(  # noqa: PLR0913, PLR0917
+    ctx: Context,
+    name: str,
+    budget_id_or_name: str | None = None,
+    category_id: str | None = None,
+    category_group_id: str | None = None,
+    note: str | None = None,
+    goal_target: float | None = None,
+    goal_target_date: str | None = None,
+) -> str:
+    """Create or update a YNAB category.
+
+    Without ``category_id``: creates a new category (POST).
+    With ``category_id``: updates an existing category (PATCH),
+    only sending fields that are not None.
+
+    Dollar amounts for ``goal_target`` are converted to YNAB milliunits.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        name: Category name (required for create, optional field for update).
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+        category_id: If provided, update this category. If None, create new.
+        category_group_id: Parent category group UUID (for create).
+        note: Optional category note.
+        goal_target: Goal target in dollars (converted to milliunits).
+        goal_target_date: Goal target date string.
+
+    Returns:
+        Confirmation text with created or updated category details.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    if category_id is None:
+        # CREATE mode
+        body: dict = {"name": name}
+        if category_group_id is not None:
+            body["category_group_id"] = category_group_id
+        if note is not None:
+            body["note"] = note
+        if goal_target is not None:
+            body["goal_target"] = dollars_to_milliunits(goal_target)
+        if goal_target_date is not None:
+            body["goal_target_date"] = goal_target_date
+
+        data = await app.client.post(
+            f"/budgets/{budget_id}/categories",
+            json={"category": body},
+        )
+        cat = data["category"]
+        return f"Category created:\n  Name: {cat['name']}\n  ID: {cat['id']}"
+
+    # UPDATE mode
+    body = {}
+    if name is not None:
+        body["name"] = name
+    if note is not None:
+        body["note"] = note
+    if goal_target is not None:
+        body["goal_target"] = dollars_to_milliunits(goal_target)
+    if goal_target_date is not None:
+        body["goal_target_date"] = goal_target_date
+
+    data = await app.client.patch(
+        f"/budgets/{budget_id}/categories/{category_id}",
+        json={"category": body},
+    )
+    cat = data["category"]
+    return f"Category updated:\n  Name: {cat['name']}\n  ID: {cat['id']}"
+
+
+@mcp.tool
+async def manage_category_group(
+    ctx: Context,
+    name: str,
+    budget_id_or_name: str | None = None,
+    category_group_id: str | None = None,
+) -> str:
+    """Create or update a YNAB category group.
+
+    Without ``category_group_id``: creates a new group (POST).
+    With ``category_group_id``: updates an existing group (PATCH).
+    Name is validated to a maximum of 50 characters.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        name: Category group name (max 50 characters).
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+        category_group_id: If provided, update this group. If None, create.
+
+    Returns:
+        Confirmation text with created or updated group details.
+
+    Raises:
+        ToolError: If name exceeds 50 characters.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    if len(name) > _MAX_GROUP_NAME_LENGTH:
+        msg = (
+            f"Category group name must be {_MAX_GROUP_NAME_LENGTH} "
+            f"characters or fewer (got {len(name)})."
+        )
+        raise ToolError(msg)
+
+    if category_group_id is None:
+        # CREATE mode
+        data = await app.client.post(
+            f"/budgets/{budget_id}/category_groups",
+            json={"category_group": {"name": name}},
+        )
+        group = data["category_group"]
+        return f"Category group created:\n  Name: {group['name']}\n  ID: {group['id']}"
+
+    # UPDATE mode
+    data = await app.client.patch(
+        f"/budgets/{budget_id}/category_groups/{category_group_id}",
+        json={"category_group": {"name": name}},
+    )
+    group = data["category_group"]
+    return f"Category group updated:\n  Name: {group['name']}\n  ID: {group['id']}"
 
 
 if __name__ == "__main__":
