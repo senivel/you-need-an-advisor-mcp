@@ -1,9 +1,14 @@
-"""Tests for transaction tools: list_transactions, get_transaction."""
+"""Tests for transaction tools: list, get, manage, delete, batch, import."""
 
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.server import get_transaction, list_transactions
+from ynab_mcp.server import (
+    delete_transaction,
+    get_transaction,
+    list_transactions,
+    manage_transaction,
+)
 
 
 @pytest.fixture
@@ -421,3 +426,298 @@ class TestGetTransaction:
 
         assert "Transaction: (no payee)" in result
         assert "Category: (none)" in result
+
+
+class TestManageTransaction:
+    """Tests for manage_transaction tool (create/update)."""
+
+    @pytest.mark.anyio
+    async def test_create_sends_post(self, mock_ctx, mocker):
+        """Create mode (no transaction_id) POSTs with {transaction: body}."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-new",
+                date="2026-03-01",
+                payee_name="Grocery Store",
+                amount=-45.67,
+                category_name="Groceries",
+            ),
+        }
+
+        result = await manage_transaction(
+            mock_ctx,
+            account_id="acct-111",
+            date="2026-03-01",
+            amount=-45.67,
+            payee_name="Grocery Store",
+        )
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        assert "/budgets/budget-123/transactions" in call_args[0][0]
+        body = call_args[1]["json"]["transaction"]
+        assert body["account_id"] == "acct-111"
+        assert body["date"] == "2026-03-01"
+        assert "created" in result.lower()
+
+    @pytest.mark.anyio
+    async def test_create_converts_dollars_to_milliunits(self, mock_ctx, mocker):
+        """Create mode converts amount dollars to milliunits."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction": _make_transaction(amount=-45.67),
+        }
+
+        await manage_transaction(
+            mock_ctx,
+            account_id="acct-111",
+            date="2026-03-01",
+            amount=-45.67,
+        )
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        body = call_args[1]["json"]["transaction"]
+        assert body["amount"] == -45670
+
+    @pytest.mark.anyio
+    async def test_create_includes_optional_fields(self, mock_ctx, mocker):
+        """Create mode includes optional fields only when provided."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction": _make_transaction(),
+        }
+
+        await manage_transaction(
+            mock_ctx,
+            account_id="acct-111",
+            date="2026-03-01",
+            amount=-10.0,
+            payee_name="Store",
+            payee_id="payee-111",
+            category_id="cat-111",
+            memo="Test memo",
+            cleared="cleared",
+            approved=True,
+            flag_color="red",
+        )
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        body = call_args[1]["json"]["transaction"]
+        assert body["payee_name"] == "Store"
+        assert body["payee_id"] == "payee-111"
+        assert body["category_id"] == "cat-111"
+        assert body["memo"] == "Test memo"
+        assert body["cleared"] == "cleared"
+        assert body["approved"] is True
+        assert body["flag_color"] == "red"
+
+    @pytest.mark.anyio
+    async def test_create_excludes_none_optional_fields(self, mock_ctx, mocker):
+        """Create mode does not include None optional fields in body."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction": _make_transaction(),
+        }
+
+        await manage_transaction(
+            mock_ctx,
+            account_id="acct-111",
+            date="2026-03-01",
+            amount=-10.0,
+        )
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        body = call_args[1]["json"]["transaction"]
+        assert "payee_name" not in body
+        assert "memo" not in body
+        assert "flag_color" not in body
+
+    @pytest.mark.anyio
+    async def test_create_missing_account_id_raises(self, mock_ctx, mocker):
+        """Create mode missing account_id raises ToolError."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="account_id"):
+            await manage_transaction(
+                mock_ctx,
+                date="2026-03-01",
+                amount=-10.0,
+            )
+
+    @pytest.mark.anyio
+    async def test_create_missing_date_raises(self, mock_ctx, mocker):
+        """Create mode missing date raises ToolError."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="date"):
+            await manage_transaction(
+                mock_ctx,
+                account_id="acct-111",
+                amount=-10.0,
+            )
+
+    @pytest.mark.anyio
+    async def test_create_missing_amount_raises(self, mock_ctx, mocker):
+        """Create mode missing amount raises ToolError."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="amount"):
+            await manage_transaction(
+                mock_ctx,
+                account_id="acct-111",
+                date="2026-03-01",
+            )
+
+    @pytest.mark.anyio
+    async def test_update_sends_put(self, mock_ctx, mocker):
+        """Update mode (with transaction_id) sends PUT with only provided fields."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.put.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-001",
+                memo="Updated memo",
+            ),
+        }
+
+        result = await manage_transaction(
+            mock_ctx,
+            transaction_id="txn-001",
+            memo="Updated memo",
+        )
+
+        call_args = mock_ctx.lifespan_context.client.put.call_args
+        assert "/transactions/txn-001" in call_args[0][0]
+        body = call_args[1]["json"]["transaction"]
+        assert body["memo"] == "Updated memo"
+        assert "account_id" not in body
+        assert "updated" in result.lower()
+
+    @pytest.mark.anyio
+    async def test_update_converts_amount(self, mock_ctx, mocker):
+        """Update mode converts amount to milliunits when provided."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.put.return_value = {
+            "transaction": _make_transaction(amount=-25.0),
+        }
+
+        await manage_transaction(
+            mock_ctx,
+            transaction_id="txn-001",
+            amount=-25.0,
+        )
+
+        call_args = mock_ctx.lifespan_context.client.put.call_args
+        body = call_args[1]["json"]["transaction"]
+        assert body["amount"] == -25000
+
+    @pytest.mark.anyio
+    async def test_create_returns_confirmation(self, mock_ctx, mocker):
+        """Create mode returns confirmation with key fields."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-new",
+                date="2026-03-01",
+                payee_name="Grocery Store",
+                amount=-45.67,
+                category_name="Groceries",
+            ),
+        }
+
+        result = await manage_transaction(
+            mock_ctx,
+            account_id="acct-111",
+            date="2026-03-01",
+            amount=-45.67,
+            payee_name="Grocery Store",
+        )
+
+        assert "2026-03-01" in result
+        assert "Grocery Store" in result
+        assert "-$45.67" in result
+
+    @pytest.mark.anyio
+    async def test_update_returns_confirmation(self, mock_ctx, mocker):
+        """Update mode returns confirmation with key fields."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.put.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-001",
+                date="2026-03-01",
+                payee_name="Coffee Shop",
+                amount=-5.50,
+                category_name="Dining Out",
+            ),
+        }
+
+        result = await manage_transaction(
+            mock_ctx,
+            transaction_id="txn-001",
+            memo="Updated",
+        )
+
+        assert "2026-03-01" in result
+        assert "Coffee Shop" in result
+        assert "-$5.50" in result
+
+
+class TestDeleteTransaction:
+    """Tests for delete_transaction tool."""
+
+    @pytest.mark.anyio
+    async def test_delete_sends_delete(self, mock_ctx, mocker):
+        """delete_transaction sends DELETE and returns confirmation."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.delete.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-001",
+                date="2026-03-01",
+                payee_name="Grocery Store",
+                amount=-45.67,
+            ),
+        }
+
+        result = await delete_transaction(mock_ctx, transaction_id="txn-001")
+
+        call_args = mock_ctx.lifespan_context.client.delete.call_args
+        assert "/transactions/txn-001" in call_args[0][0]
+        assert "deleted" in result.lower()
+        assert "2026-03-01" in result
+        assert "Grocery Store" in result
+        assert "-$45.67" in result
