@@ -906,5 +906,168 @@ async def get_transaction(
     return "\n".join(lines)
 
 
+@mcp.tool
+async def manage_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
+    ctx: Context,
+    budget_id_or_name: str = "last-used",
+    transaction_id: str | None = None,
+    account_id: str | None = None,
+    date: str | None = None,
+    amount: float | None = None,
+    payee_name: str | None = None,
+    payee_id: str | None = None,
+    category_id: str | None = None,
+    memo: str | None = None,
+    cleared: str | None = None,
+    approved: bool | None = None,  # noqa: FBT001
+    flag_color: str | None = None,
+) -> str:
+    """Create or update a YNAB transaction.
+
+    Without ``transaction_id``: creates a new transaction (POST).
+    Requires ``account_id``, ``date``, and ``amount``.
+    With ``transaction_id``: updates an existing transaction (PUT),
+    only sending fields that are not None.
+
+    Dollar amounts for ``amount`` are converted to YNAB milliunits.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        transaction_id: If provided, update this transaction. If None, create new.
+        account_id: Account UUID (required for create).
+        date: Transaction date as ISO string (required for create).
+        amount: Transaction amount in dollars (required for create, converted
+            to milliunits).
+        payee_name: Payee display name.
+        payee_id: Payee UUID.
+        category_id: Category UUID.
+        memo: Transaction memo.
+        cleared: Cleared status ("cleared", "uncleared", "reconciled").
+        approved: Whether the transaction is approved.
+        flag_color: Flag color for the transaction.
+
+    Returns:
+        Confirmation text with key transaction fields.
+
+    Raises:
+        ToolError: If creating without required fields (account_id, date, amount).
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    # Optional fields shared between create and update
+    optional_fields: dict[str, str | bool] = {}
+    if payee_name is not None:
+        optional_fields["payee_name"] = payee_name
+    if payee_id is not None:
+        optional_fields["payee_id"] = payee_id
+    if category_id is not None:
+        optional_fields["category_id"] = category_id
+    if memo is not None:
+        optional_fields["memo"] = memo
+    if cleared is not None:
+        optional_fields["cleared"] = cleared
+    if approved is not None:
+        optional_fields["approved"] = approved
+    if flag_color is not None:
+        optional_fields["flag_color"] = flag_color
+
+    if transaction_id is None:
+        # CREATE mode
+        missing = []
+        if account_id is None:
+            missing.append("account_id")
+        if date is None:
+            missing.append("date")
+        if amount is None:
+            missing.append("amount")
+        if missing:
+            msg = f"Create requires: {', '.join(missing)}"
+            raise ToolError(msg)
+
+        body: dict = {
+            "account_id": account_id,
+            "date": date,
+            "amount": dollars_to_milliunits(amount),  # type: ignore[arg-type]
+            **optional_fields,
+        }
+
+        data = await app.client.post(
+            f"/budgets/{budget_id}/transactions",
+            json={"transaction": body},
+        )
+        txn = data["transaction"]
+        return _format_transaction_confirmation("created", txn)
+
+    # UPDATE mode
+    body = {**optional_fields}
+    if amount is not None:
+        body["amount"] = dollars_to_milliunits(amount)
+    if date is not None:
+        body["date"] = date
+    if account_id is not None:
+        body["account_id"] = account_id
+
+    data = await app.client.put(
+        f"/budgets/{budget_id}/transactions/{transaction_id}",
+        json={"transaction": body},
+    )
+    txn = data["transaction"]
+    return _format_transaction_confirmation("updated", txn)
+
+
+def _format_transaction_confirmation(verb: str, txn: dict) -> str:
+    """Format a transaction create/update/delete confirmation.
+
+    Args:
+        verb: Action word ("created", "updated", "deleted").
+        txn: Transaction dict from the YNAB API response.
+
+    Returns:
+        Confirmation string with key transaction fields.
+    """
+    payee = txn.get("payee_name") or "(no payee)"
+    category = txn.get("category_name") or "(no category)"
+    lines = [
+        f"Transaction {verb}:",
+        f"  ID: {txn['id']}",
+        f"  Date: {txn['date']}",
+        f"  Payee: {payee}",
+        f"  Amount: {format_dollars(txn['amount'])}",
+        f"  Category: {category}",
+    ]
+    return "\n".join(lines)
+
+
+@mcp.tool
+async def delete_transaction(
+    ctx: Context,
+    transaction_id: str,
+    budget_id_or_name: str = "last-used",
+) -> str:
+    """Delete a YNAB transaction.
+
+    Sends a DELETE request for the specified transaction and returns
+    a confirmation with the deleted transaction's key fields.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        transaction_id: The transaction UUID to delete.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+
+    Returns:
+        Confirmation text with deleted transaction details.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    data = await app.client.delete(
+        f"/budgets/{budget_id}/transactions/{transaction_id}",
+    )
+    txn = data["transaction"]
+    return _format_transaction_confirmation("deleted", txn)
+
+
 if __name__ == "__main__":
     mcp.run()
