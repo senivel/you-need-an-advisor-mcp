@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
-import ynab_mcp.client as client_module
 from fastmcp.exceptions import ToolError
-from ynab_mcp.client import YNABClient
 
+import ynab_mcp.client as client_module
+from ynab_mcp.client import YNABClient
 from ynab_mcp.errors import YNABAPIError
 from ynab_mcp.rate_limiter import RateLimiter
 

@@ -5,10 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "Alex Levine", email = "awlevine@pm.me" }]
 requires-python = ">=3.13"
-dependencies = [
-    "fastmcp>=3.1.0",
-    "httpx>=0.28.1",
-]
+dependencies = ["fastmcp>=3.1.0", "httpx>=0.28.1"]
 
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]
@@ -38,7 +35,6 @@ ignore = [
   "COM812", # trailing comma
   "DTZ005", # call datetime.now() without tz
   "ISC001", # implicit single line str concat
-  "PD901",  # avoid using df as a variable for DataFrames
   "TRY003", # long messages outside exception class
   "D203",   # 1 blank line required before class docstring
   "D213",   # Multi-line docstring summary should start at the second line
@@ -74,13 +70,13 @@ xfail_strict = true
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.5.1",
-    "pytest>=9.0.2",
-    "pytest-clarity>=1.0.1",
-    "pytest-cov>=7.0.0",
-    "pytest-icdiff>=0.9",
-    "pytest-mock>=3.15.1",
-    "pytest-socket>=0.7.0",
-    "pytest-sugar>=1.1.1",
-    "ruff>=0.15.4",
+  "pre-commit>=4.5.1",
+  "pytest>=9.0.2",
+  "pytest-clarity>=1.0.1",
+  "pytest-cov>=7.0.0",
+  "pytest-icdiff>=0.9",
+  "pytest-mock>=3.15.1",
+  "pytest-socket>=0.7.0",
+  "pytest-sugar>=1.1.1",
+  "ruff>=0.15.4",
 ]
