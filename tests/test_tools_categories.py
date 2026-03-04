@@ -150,6 +150,11 @@ class TestGetCategories:
         # Dollar formatting
         assert "$1,500.00" in result
         assert "$500.00" in result
+        # IDs in output
+        assert "ID: group-1" in result
+        assert "ID: group-2" in result
+        assert "ID: cat-1" in result
+        assert "ID: cat-3" in result
 
     @pytest.mark.anyio
     async def test_list_categories_filters_hidden(self, mock_ctx, mocker):

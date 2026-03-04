@@ -80,6 +80,8 @@ class TestGetAccounts:
         assert "$1,500.00" in result
         assert "Savings" in result
         assert "$25,000.50" in result
+        assert "ID: acct-111" in result
+        assert "ID: acct-222" in result
 
     @pytest.mark.anyio
     async def test_list_accounts_excludes_closed(self, mock_ctx, mocker):
