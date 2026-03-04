@@ -221,6 +221,28 @@ class TestResponseHandling:
         assert result == {"user": {"id": "abc"}}
 
 
+class TestPatchMethod:
+    """Tests for client.patch() method."""
+
+    @pytest.mark.anyio
+    async def test_patch_delegates_to_request(self, client, mock_http_client):
+        """patch() sends a PATCH request through request()."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"category": {"id": "cat-001", "name": "Updated"}}},
+        )
+
+        result = await client.patch(
+            "/budgets/x/categories/cat-001",
+            json={"category": {"name": "Updated"}},
+        )
+
+        mock_http_client.request.assert_called_once()
+        call_args = mock_http_client.request.call_args
+        assert call_args[0][0] == "PATCH"
+        assert call_args[0][1] == "/budgets/x/categories/cat-001"
+        assert result["category"]["id"] == "cat-001"
+
+
 class TestStdoutCompliance:
     """Tests for INFR-08: no stdout writes."""
 

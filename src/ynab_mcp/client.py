@@ -172,6 +172,18 @@ class YNABClient:
         """
         return await self.request("POST", path, **kwargs)
 
+    async def patch(self, path: str, **kwargs: JSONValue) -> dict[str, Any]:
+        """Send a PATCH request to the YNAB API.
+
+        Args:
+            path: API path relative to base URL.
+            **kwargs: Additional keyword arguments passed to httpx.
+
+        Returns:
+            The unwrapped and converted response data.
+        """
+        return await self.request("PATCH", path, **kwargs)
+
     @staticmethod
     def _raise_api_error(response: httpx.Response) -> None:
         """Parse a YNAB error response and raise YNABAPIError.

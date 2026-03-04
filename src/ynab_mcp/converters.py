@@ -50,3 +50,54 @@ def dollars_to_milliunits(dollars: float) -> int:
     """
     result = Decimal(str(dollars)) * MILLIUNIT_FACTOR
     return int(result.quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+
+def format_dollars(amount: float) -> str:
+    """Format a dollar amount with $ symbol and comma separators.
+
+    Args:
+        amount: Dollar amount (already converted from milliunits).
+
+    Returns:
+        Formatted string like "$1,234.56" or "-$1,234.56".
+
+    Examples:
+        >>> format_dollars(1234.56)
+        '$1,234.56'
+        >>> format_dollars(-50.0)
+        '-$50.00'
+        >>> format_dollars(0.0)
+        '$0.00'
+    """
+    if amount < 0:
+        return f"-${abs(amount):,.2f}"
+    return f"${amount:,.2f}"
+
+
+_YYYY_MM_LENGTH = 7
+
+
+def normalize_month(month: str | None) -> str:
+    """Normalize a month parameter for the YNAB API.
+
+    Accepts ``"YYYY-MM"``, ``"YYYY-MM-DD"``, or ``None`` (current month).
+
+    Args:
+        month: Month string or None for current month.
+
+    Returns:
+        ``"current"`` or ``"YYYY-MM-01"`` format string.
+
+    Examples:
+        >>> normalize_month(None)
+        'current'
+        >>> normalize_month("2026-03")
+        '2026-03-01'
+        >>> normalize_month("2026-03-01")
+        '2026-03-01'
+    """
+    if month is None:
+        return "current"
+    if len(month) == _YYYY_MM_LENGTH:
+        return f"{month}-01"
+    return month

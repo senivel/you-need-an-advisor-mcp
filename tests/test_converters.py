@@ -4,7 +4,12 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from ynab_mcp.converters import dollars_to_milliunits, milliunits_to_dollars
+from ynab_mcp.converters import (
+    dollars_to_milliunits,
+    format_dollars,
+    milliunits_to_dollars,
+    normalize_month,
+)
 from ynab_mcp.models import BudgetsResponse, BudgetSummary, ErrorDetail, ErrorResponse
 
 
@@ -101,6 +106,38 @@ class TestConversionProperties:
         dollars_low = milliunits_to_dollars(milliunits)
         dollars_high = milliunits_to_dollars(milliunits + 1)
         assert dollars_high >= dollars_low
+
+
+class TestFormatDollars:
+    """Tests for format_dollars() helper."""
+
+    def test_positive_amount(self):
+        assert format_dollars(1234.56) == "$1,234.56"
+
+    def test_negative_amount(self):
+        assert format_dollars(-50.0) == "-$50.00"
+
+    def test_zero(self):
+        assert format_dollars(0.0) == "$0.00"
+
+    def test_large_amount(self):
+        assert format_dollars(1000000.99) == "$1,000,000.99"
+
+    def test_small_amount(self):
+        assert format_dollars(0.01) == "$0.01"
+
+
+class TestNormalizeMonth:
+    """Tests for normalize_month() helper."""
+
+    def test_none_returns_current(self):
+        assert normalize_month(None) == "current"
+
+    def test_yyyy_mm_appends_day(self):
+        assert normalize_month("2026-03") == "2026-03-01"
+
+    def test_yyyy_mm_dd_passthrough(self):
+        assert normalize_month("2026-03-01") == "2026-03-01"
 
 
 class TestBudgetSummaryModel:
