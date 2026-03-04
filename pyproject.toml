@@ -69,7 +69,7 @@ skip_covered = true
 exclude_lines = ["pragma: no cover", "pass", "raise NotImplementedError"]
 
 [tool.pytest.ini_options]
-addopts = "-rsxXE --tb=short --strict-markers --cov --cov-append --disable-socket"
+addopts = "-rsxXE --tb=short --strict-markers --cov --cov-append --disable-socket --allow-unix-socket"
 xfail_strict = true
 
 [dependency-groups]
