@@ -1,8 +1,8 @@
-"""Tests for account tools: get_accounts, get_account."""
+"""Tests for account tools: get_accounts, get_account, create_account."""
 
 import pytest
 
-from ynab_mcp.server import get_account, get_accounts
+from ynab_mcp.server import create_account, get_account, get_accounts
 
 
 @pytest.fixture
@@ -235,5 +235,100 @@ class TestGetAccount:
         }
 
         result = await get_account(mock_ctx, account_id="acct-111")
+
+        assert result.startswith("Using budget 'My Budget' (only budget found)")
+
+
+class TestCreateAccount:
+    """Tests for create_account tool."""
+
+    @pytest.mark.anyio
+    async def test_create_account(self, mock_ctx, mocker):
+        """Verifies POST called with milliunits, confirmation message format."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "account": _make_account(
+                name="New Savings",
+                account_type="savings",
+                balance=500.0,
+                account_id="acct-new-999",
+            ),
+        }
+
+        result = await create_account(
+            mock_ctx,
+            name="New Savings",
+            account_type="savings",
+            balance=500.0,
+        )
+
+        assert "Account created:" in result
+        assert "New Savings" in result
+        assert "Type: savings" in result
+        assert "$500.00" in result
+        assert "acct-new-999" in result
+
+        # Verify POST was called with correct path and body
+        mock_ctx.lifespan_context.client.post.assert_called_once_with(
+            "/budgets/budget-123/accounts",
+            json={
+                "account": {
+                    "name": "New Savings",
+                    "type": "savings",
+                    "balance": 500000,
+                }
+            },
+        )
+
+    @pytest.mark.anyio
+    async def test_create_account_dollar_conversion(self, mock_ctx, mocker):
+        """$100.50 -> 100500 milliunits in request body."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "account": _make_account(
+                name="Checking",
+                account_type="checking",
+                balance=100.50,
+                account_id="acct-new-888",
+            ),
+        }
+
+        await create_account(
+            mock_ctx,
+            name="Checking",
+            account_type="checking",
+            balance=100.50,
+        )
+
+        call_kwargs = mock_ctx.lifespan_context.client.post.call_args
+        body = call_kwargs.kwargs.get("json") or call_kwargs[1].get("json")
+        assert body["account"]["balance"] == 100500
+
+    @pytest.mark.anyio
+    async def test_create_account_prepends_info(self, mock_ctx, mocker):
+        """Info message from resolve_budget is prepended."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=(
+                "budget-123",
+                "Using budget 'My Budget' (only budget found)",
+            ),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "account": _make_account(account_id="acct-new-777"),
+        }
+
+        result = await create_account(
+            mock_ctx,
+            name="Checking",
+            account_type="checking",
+            balance=0.0,
+        )
 
         assert result.startswith("Using budget 'My Budget' (only budget found)")

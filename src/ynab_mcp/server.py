@@ -19,7 +19,7 @@ from fastmcp import Context, FastMCP
 
 from ynab_mcp.budget_resolver import resolve_budget
 from ynab_mcp.client import YNABClient
-from ynab_mcp.converters import format_dollars
+from ynab_mcp.converters import dollars_to_milliunits, format_dollars
 from ynab_mcp.rate_limiter import RateLimiter
 
 
@@ -281,6 +281,62 @@ async def get_account(
     ]
     if acct.get("note"):
         lines.append(f"  Note: {acct['note']}")
+
+    result = "\n".join(lines)
+    if info:
+        result = f"{info}\n\n{result}"
+    return result
+
+
+@mcp.tool
+async def create_account(
+    ctx: Context,
+    name: str,
+    account_type: str,
+    balance: float,
+    budget_id_or_name: str | None = None,
+) -> str:
+    """Create a new account in a YNAB budget.
+
+    Accepts a dollar amount for the opening balance and converts it
+    to YNAB milliunits before sending to the API.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        name: Display name for the new account.
+        account_type: Account type (checking, savings, cash, creditCard,
+            lineOfCredit, otherAsset, otherLiability, mortgage, autoLoan,
+            studentLoan, personalLoan, medicalDebt, otherDebt).
+        balance: Opening balance in dollars (converted to milliunits).
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+
+    Returns:
+        Confirmation text with created account details.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+
+    milliunits = dollars_to_milliunits(balance)
+    data = await app.client.post(
+        f"/budgets/{budget_id}/accounts",
+        json={
+            "account": {
+                "name": name,
+                "type": account_type,
+                "balance": milliunits,
+            }
+        },
+    )
+    acct = data["account"]
+
+    lines = [
+        "Account created:",
+        f"  Name: {acct['name']}",
+        f"  Type: {acct['type']}",
+        f"  Balance: {format_dollars(acct['balance'])}",
+        f"  ID: {acct['id']}",
+    ]
 
     result = "\n".join(lines)
     if info:
