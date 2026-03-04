@@ -126,7 +126,9 @@ class TestRateLimiterRecord:
             mock_time.monotonic.return_value = 42.0
             limiter.record()
 
-        _, count, _ = limiter.check()
+            mock_time.monotonic.return_value = 43.0
+            _, count, _ = limiter.check()
+
         assert count == 1
 
 
