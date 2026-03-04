@@ -174,6 +174,94 @@ class CategoryGroupWithCategories(CategoryGroup):
     categories: list[Category]
 
 
+class SubTransaction(BaseModel):
+    """A YNAB sub-transaction (split transaction component).
+
+    Attributes:
+        id: Sub-transaction UUID.
+        transaction_id: Parent transaction UUID.
+        amount: Amount in dollars (converted from milliunits).
+        deleted: Whether sub-transaction is deleted.
+        payee_id: Payee UUID.
+        payee_name: Payee display name.
+        category_id: Category UUID.
+        category_name: Category display name.
+        memo: Optional memo text.
+        transfer_account_id: Account UUID if this is a transfer.
+        transfer_transaction_id: Matching transfer transaction UUID.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    transaction_id: str
+    amount: float
+    deleted: bool
+    payee_id: str | None = None
+    payee_name: str | None = None
+    category_id: str | None = None
+    category_name: str | None = None
+    memo: str | None = None
+    transfer_account_id: str | None = None
+    transfer_transaction_id: str | None = None
+
+
+class TransactionDetail(BaseModel):
+    """A detailed YNAB transaction.
+
+    Attributes:
+        id: Transaction UUID.
+        date: Transaction date (YYYY-MM-DD).
+        amount: Amount in dollars (converted from milliunits).
+        account_id: Account UUID.
+        account_name: Account display name.
+        approved: Whether transaction is approved.
+        cleared: Cleared status (cleared, uncleared, reconciled).
+        deleted: Whether transaction is deleted.
+        memo: Optional memo text.
+        payee_id: Payee UUID.
+        payee_name: Payee display name.
+        category_id: Category UUID.
+        category_name: Category display name.
+        transfer_account_id: Account UUID if this is a transfer.
+        transfer_transaction_id: Matching transfer transaction UUID.
+        matched_transaction_id: Matched imported transaction UUID.
+        import_id: Import identifier for deduplication.
+        import_payee_name: Payee name from import source.
+        import_payee_name_original: Original payee name from import source.
+        flag_color: Transaction flag color.
+        flag_name: Transaction flag name.
+        debt_transaction_type: Debt transaction type (payment, etc.).
+        subtransactions: List of sub-transactions (splits).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    date: str
+    amount: float
+    account_id: str
+    account_name: str
+    approved: bool
+    cleared: str
+    deleted: bool
+    memo: str | None = None
+    payee_id: str | None = None
+    payee_name: str | None = None
+    category_id: str | None = None
+    category_name: str | None = None
+    transfer_account_id: str | None = None
+    transfer_transaction_id: str | None = None
+    matched_transaction_id: str | None = None
+    import_id: str | None = None
+    import_payee_name: str | None = None
+    import_payee_name_original: str | None = None
+    flag_color: str | None = None
+    flag_name: str | None = None
+    debt_transaction_type: str | None = None
+    subtransactions: list[SubTransaction] = []
+
+
 class UserResponse(BaseModel):
     """Response for the GET /user endpoint.
 
