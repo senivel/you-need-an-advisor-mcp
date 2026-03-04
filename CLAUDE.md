@@ -24,6 +24,10 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget). Python 3.13+, 
 - Tests are exempt from annotation (`ANN`) and `PLR6301` rules
 - Pre-commit runs ruff lint+format and prettier (for JSON/YAML/MD) on commit
 
+## Tool Preferences
+
+- Prefer the Context7 MCP (`resolve-library-id` → `query-docs`) over web search when looking up library or framework documentation. Fall back to web search only if Context7 lacks coverage for the library in question.
+
 ## Project Structure
 
 - `src/ynab_mcp/` — main package (src layout)
