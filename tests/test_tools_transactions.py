@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.server import list_transactions
+from ynab_mcp.server import get_transaction, list_transactions
 
 
 @pytest.fixture
@@ -289,3 +289,135 @@ class TestListTransactions:
 
         assert "(no payee)" in result
         assert "(no category)" in result
+
+
+class TestGetTransaction:
+    """Tests for get_transaction tool."""
+
+    @pytest.mark.anyio
+    async def test_full_detail_view(self, mock_ctx, mocker):
+        """Returns full detail view with all fields."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(
+                txn_id="txn-001",
+                date="2026-03-01",
+                payee_name="Grocery Store",
+                amount=-45.67,
+                category_name="Groceries",
+                account_name="Checking",
+                cleared="cleared",
+                approved=True,
+            ),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Transaction: Grocery Store" in result
+        assert "ID: txn-001" in result
+        assert "Date: 2026-03-01" in result
+        assert "-$45.67" in result
+        assert "Account: Checking" in result
+        assert "Category: Groceries" in result
+        assert "Status: cleared" in result
+        assert "Approved: Yes" in result
+
+    @pytest.mark.anyio
+    async def test_shows_memo(self, mock_ctx, mocker):
+        """Shows memo when present."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(memo="Weekly groceries"),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Memo: Weekly groceries" in result
+
+    @pytest.mark.anyio
+    async def test_shows_flag_color(self, mock_ctx, mocker):
+        """Shows flag_color when present."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(flag_color="red"),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Flag: red" in result
+
+    @pytest.mark.anyio
+    async def test_shows_transfer_account(self, mock_ctx, mocker):
+        """Shows transfer_account_id when present."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(
+                transfer_account_id="acct-transfer-222",
+            ),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Transfer account: acct-transfer-222" in result
+
+    @pytest.mark.anyio
+    async def test_subtransactions(self, mock_ctx, mocker):
+        """Shows subtransactions as indented list with amount, category, memo."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(
+                subtransactions=[
+                    {
+                        "amount": -30.00,
+                        "category_name": "Groceries",
+                        "memo": "Food items",
+                    },
+                    {
+                        "amount": -15.67,
+                        "category_name": "Household",
+                        "memo": None,
+                    },
+                ],
+            ),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Split (2 items):" in result
+        assert "-$30.00 | Groceries" in result
+        assert "Memo: Food items" in result
+        assert "-$15.67 | Household" in result
+
+    @pytest.mark.anyio
+    async def test_no_payee_no_category(self, mock_ctx, mocker):
+        """Handles transaction with no payee or category gracefully."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = {
+            "transaction": _make_transaction(
+                payee_name=None,
+                category_name=None,
+            ),
+        }
+
+        result = await get_transaction(mock_ctx, transaction_id="txn-001")
+
+        assert "Transaction: (no payee)" in result
+        assert "Category: (none)" in result

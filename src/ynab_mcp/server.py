@@ -836,5 +836,75 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
     return "\n".join(lines)
 
 
+def _format_transaction_detail(txn: dict) -> list[str]:
+    """Format a single transaction for detail view.
+
+    Includes all fields with optional ones only shown when present.
+    Subtransactions are displayed as an indented list.
+
+    Args:
+        txn: Transaction dict from the YNAB API response.
+
+    Returns:
+        List of formatted lines for the detail view.
+    """
+    lines = [
+        f"Transaction: {txn.get('payee_name') or '(no payee)'}",
+        f"  ID: {txn['id']}",
+        f"  Date: {txn['date']}",
+        f"  Amount: {format_dollars(txn['amount'])}",
+        f"  Account: {txn['account_name']}",
+        f"  Category: {txn.get('category_name') or '(none)'}",
+        f"  Status: {txn['cleared']}",
+        f"  Approved: {'Yes' if txn['approved'] else 'No'}",
+    ]
+    if txn.get("memo"):
+        lines.append(f"  Memo: {txn['memo']}")
+    if txn.get("flag_color"):
+        lines.append(f"  Flag: {txn['flag_color']}")
+    if txn.get("transfer_account_id"):
+        lines.append(f"  Transfer account: {txn['transfer_account_id']}")
+
+    subtxns = txn.get("subtransactions", [])
+    if subtxns:
+        lines.append(f"  Split ({len(subtxns)} items):")
+        for sub in subtxns:
+            sub_cat = sub.get("category_name") or "(no category)"
+            lines.append(f"    - {format_dollars(sub['amount'])} | {sub_cat}")
+            if sub.get("memo"):
+                lines.append(f"      Memo: {sub['memo']}")
+    return lines
+
+
+@mcp.tool
+async def get_transaction(
+    ctx: Context,
+    transaction_id: str,
+    budget_id_or_name: str = "last-used",
+) -> str:
+    """Get detailed information about a specific YNAB transaction.
+
+    Returns all transaction fields including payee, amount, account,
+    category, cleared status, approval, and optional fields (memo,
+    flag, transfer). Subtransactions are shown as an indented list.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        transaction_id: The transaction UUID.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+
+    Returns:
+        Structured text with full transaction detail view.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+
+    data = await app.client.get(f"/budgets/{budget_id}/transactions/{transaction_id}")
+    txn = data["transaction"]
+
+    lines = _format_transaction_detail(txn)
+    return "\n".join(lines)
+
+
 if __name__ == "__main__":
     mcp.run()
