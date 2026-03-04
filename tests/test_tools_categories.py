@@ -8,6 +8,7 @@ from ynab_mcp.server import (
     get_category,
     manage_category,
     manage_category_group,
+    month_category_budget,
 )
 
 
@@ -490,3 +491,151 @@ class TestManageCategoryGroup:
         assert "Fixed Costs" in result
         call_args = mock_ctx.lifespan_context.client.patch.call_args
         assert call_args[0][0] == "/budgets/budget-123/category_groups/group-1"
+
+
+def _sample_month_category():
+    """Return sample month category data."""
+    return {
+        "category": {
+            "id": "cat-1",
+            "category_group_id": "group-1",
+            "category_group_name": "Fixed Expenses",
+            "name": "Rent",
+            "hidden": False,
+            "budgeted": 1500.0,
+            "activity": -1500.0,
+            "balance": 0.0,
+            "deleted": False,
+            "note": None,
+            "goal_type": None,
+            "goal_target": None,
+            "goal_target_month": None,
+            "goal_percentage_complete": None,
+            "goal_months_to_budget": None,
+            "goal_under_funded": None,
+            "goal_overall_funded": None,
+            "goal_overall_left": None,
+        }
+    }
+
+
+class TestMonthCategoryBudget:
+    """Tests for month_category_budget tool."""
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_get(self, mock_ctx, mocker):
+        """Correct API path with normalized month, structured output."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
+
+        result = await month_category_budget(
+            mock_ctx, category_id="cat-1", month="2026-03-01"
+        )
+
+        assert "Rent" in result
+        assert "$1,500.00" in result
+        assert "-$1,500.00" in result
+        call_args = mock_ctx.lifespan_context.client.get.call_args
+        assert (
+            call_args[0][0] == "/budgets/budget-123/months/2026-03-01/categories/cat-1"
+        )
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_get_default_month(self, mock_ctx, mocker):
+        """None month sends 'current' to API."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
+
+        await month_category_budget(mock_ctx, category_id="cat-1")
+
+        call_args = mock_ctx.lifespan_context.client.get.call_args
+        assert "/months/current/" in call_args[0][0]
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_get_normalizes_month(self, mock_ctx, mocker):
+        """'2026-03' becomes '2026-03-01' in API path."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
+
+        await month_category_budget(mock_ctx, category_id="cat-1", month="2026-03")
+
+        call_args = mock_ctx.lifespan_context.client.get.call_args
+        assert "/months/2026-03-01/" in call_args[0][0]
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_update(self, mock_ctx, mocker):
+        """Budgeted converted to milliunits, correct PATCH body."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category": {
+                "id": "cat-1",
+                "name": "Rent",
+                "budgeted": 1600.0,
+            }
+        }
+
+        result = await month_category_budget(
+            mock_ctx, category_id="cat-1", month="2026-03", budgeted=1600.0
+        )
+
+        assert "Category budget updated" in result
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        assert (
+            call_args[0][0] == "/budgets/budget-123/months/2026-03-01/categories/cat-1"
+        )
+        body = call_args[1]["json"]
+        assert body["category"]["budgeted"] == 1600000
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_update_default_month(self, mock_ctx, mocker):
+        """None month defaults to 'current' for update."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category": {
+                "id": "cat-1",
+                "name": "Rent",
+                "budgeted": 1500.0,
+            }
+        }
+
+        await month_category_budget(mock_ctx, category_id="cat-1", budgeted=1500.0)
+
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        assert "/months/current/" in call_args[0][0]
+
+    @pytest.mark.anyio
+    async def test_month_category_budget_update_confirmation(self, mock_ctx, mocker):
+        """Response includes formatted dollar amount."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "category": {
+                "id": "cat-1",
+                "name": "Rent",
+                "budgeted": 1600.0,
+            }
+        }
+
+        result = await month_category_budget(
+            mock_ctx, category_id="cat-1", month="2026-03", budgeted=1600.0
+        )
+
+        assert "$1,600.00" in result
+        assert "Rent" in result

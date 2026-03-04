@@ -20,7 +20,7 @@ from fastmcp.exceptions import ToolError
 
 from ynab_mcp.budget_resolver import resolve_budget
 from ynab_mcp.client import YNABClient
-from ynab_mcp.converters import dollars_to_milliunits, format_dollars
+from ynab_mcp.converters import dollars_to_milliunits, format_dollars, normalize_month
 from ynab_mcp.rate_limiter import RateLimiter
 
 
@@ -640,6 +640,69 @@ async def manage_category_group(
     )
     group = data["category_group"]
     return f"Category group updated:\n  Name: {group['name']}\n  ID: {group['id']}"
+
+
+@mcp.tool
+async def month_category_budget(
+    ctx: Context,
+    category_id: str,
+    budget_id_or_name: str | None = None,
+    month: str | None = None,
+    budgeted: float | None = None,
+) -> str:
+    """Get or update the budgeted amount for a category in a specific month.
+
+    Without ``budgeted``: returns category budget info for the month (GET).
+    With ``budgeted``: updates the budgeted amount (PATCH), converting
+    dollars to milliunits. Month defaults to ``"current"`` when None.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        category_id: The category UUID.
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+        month: Month as ``"YYYY-MM"`` or ``"YYYY-MM-DD"``. Defaults to
+            current month when None.
+        budgeted: If provided, set the budgeted amount (in dollars) for
+            this category in the given month.
+
+    Returns:
+        Structured text with category budget details (GET mode) or
+        confirmation with updated amount (UPDATE mode).
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    normalized = normalize_month(month)
+    path = f"/budgets/{budget_id}/months/{normalized}/categories/{category_id}"
+
+    if budgeted is None:
+        # GET mode
+        data = await app.client.get(path)
+        cat = data["category"]
+
+        lines = [
+            f"Category: {cat['name']}",
+            f"  Month: {normalized}",
+            f"  Budgeted: {format_dollars(cat['budgeted'])}",
+            f"  Activity: {format_dollars(cat['activity'])}",
+            f"  Balance: {format_dollars(cat['balance'])}",
+        ]
+        lines.extend(_format_goal_lines(cat))
+        return "\n".join(lines)
+
+    # UPDATE mode
+    milliunits = dollars_to_milliunits(budgeted)
+    data = await app.client.patch(
+        path,
+        json={"category": {"budgeted": milliunits}},
+    )
+    cat = data["category"]
+    return (
+        f"Category budget updated:\n"
+        f"  Category: {cat['name']}\n"
+        f"  Month: {normalized}\n"
+        f"  Budgeted: {format_dollars(budgeted)}"
+    )
 
 
 if __name__ == "__main__":
