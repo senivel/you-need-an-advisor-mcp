@@ -4,8 +4,11 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 from ynab_mcp.server import (
+    batch_create_transactions,
+    batch_update_transactions,
     delete_transaction,
     get_transaction,
+    import_transactions,
     list_transactions,
     manage_transaction,
 )
@@ -721,3 +724,198 @@ class TestDeleteTransaction:
         assert "2026-03-01" in result
         assert "Grocery Store" in result
         assert "-$45.67" in result
+
+
+class TestBatchCreateTransactions:
+    """Tests for batch_create_transactions tool."""
+
+    @pytest.mark.anyio
+    async def test_batch_create_posts_with_converted_amounts(self, mock_ctx, mocker):
+        """Converts amounts and POSTs with {transactions: [...]}."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction_ids": ["txn-001", "txn-002"],
+            "duplicate_import_ids": [],
+            "transactions": [],
+        }
+
+        await batch_create_transactions(
+            mock_ctx,
+            transactions=[
+                {"account_id": "acct-1", "date": "2026-03-01", "amount": -10.50},
+                {"account_id": "acct-1", "date": "2026-03-02", "amount": -25.00},
+            ],
+        )
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        assert "/budgets/budget-123/transactions" in call_args[0][0]
+        txns = call_args[1]["json"]["transactions"]
+        assert txns[0]["amount"] == -10500
+        assert txns[1]["amount"] == -25000
+
+    @pytest.mark.anyio
+    async def test_batch_create_returns_summary(self, mock_ctx, mocker):
+        """Returns summary count and per-transaction ID lines."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction_ids": ["txn-001", "txn-002"],
+            "duplicate_import_ids": [],
+            "transactions": [],
+        }
+
+        result = await batch_create_transactions(
+            mock_ctx,
+            transactions=[
+                {"account_id": "acct-1", "date": "2026-03-01", "amount": -10.0},
+                {"account_id": "acct-1", "date": "2026-03-02", "amount": -25.0},
+            ],
+        )
+
+        assert "2" in result
+        assert "created" in result.lower()
+        assert "txn-001" in result
+        assert "txn-002" in result
+
+    @pytest.mark.anyio
+    async def test_batch_create_empty_raises(self, mock_ctx, mocker):
+        """Empty batch raises ToolError."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError):
+            await batch_create_transactions(mock_ctx, transactions=[])
+
+    @pytest.mark.anyio
+    async def test_batch_create_includes_duplicate_ids(self, mock_ctx, mocker):
+        """Includes duplicate_import_ids in response when present."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction_ids": ["txn-001"],
+            "duplicate_import_ids": ["dup-001"],
+            "transactions": [],
+        }
+
+        result = await batch_create_transactions(
+            mock_ctx,
+            transactions=[
+                {"account_id": "acct-1", "date": "2026-03-01", "amount": -10.0},
+            ],
+        )
+
+        assert "dup-001" in result
+
+
+class TestBatchUpdateTransactions:
+    """Tests for batch_update_transactions tool."""
+
+    @pytest.mark.anyio
+    async def test_batch_update_patches_with_converted_amounts(self, mock_ctx, mocker):
+        """Converts amounts and PATCHes with {transactions: [...]}."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "transaction_ids": ["txn-001"],
+            "duplicate_import_ids": [],
+            "transactions": [],
+        }
+
+        await batch_update_transactions(
+            mock_ctx,
+            transactions=[
+                {"id": "txn-001", "amount": -30.00},
+            ],
+        )
+
+        call_args = mock_ctx.lifespan_context.client.patch.call_args
+        assert "/budgets/budget-123/transactions" in call_args[0][0]
+        txns = call_args[1]["json"]["transactions"]
+        assert txns[0]["amount"] == -30000
+
+    @pytest.mark.anyio
+    async def test_batch_update_returns_summary(self, mock_ctx, mocker):
+        """Returns summary count and per-transaction ID lines."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.patch.return_value = {
+            "transaction_ids": ["txn-001", "txn-002"],
+            "duplicate_import_ids": [],
+            "transactions": [],
+        }
+
+        result = await batch_update_transactions(
+            mock_ctx,
+            transactions=[
+                {"id": "txn-001", "memo": "Updated"},
+                {"id": "txn-002", "memo": "Also updated"},
+            ],
+        )
+
+        assert "2" in result
+        assert "updated" in result.lower()
+        assert "txn-001" in result
+        assert "txn-002" in result
+
+    @pytest.mark.anyio
+    async def test_batch_update_empty_raises(self, mock_ctx, mocker):
+        """Empty batch raises ToolError."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError):
+            await batch_update_transactions(mock_ctx, transactions=[])
+
+
+class TestImportTransactions:
+    """Tests for import_transactions tool."""
+
+    @pytest.mark.anyio
+    async def test_import_posts_and_returns_ids(self, mock_ctx, mocker):
+        """POSTs to /transactions/import and returns count + IDs."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction_ids": ["txn-import-001", "txn-import-002"],
+        }
+
+        result = await import_transactions(mock_ctx)
+
+        call_args = mock_ctx.lifespan_context.client.post.call_args
+        assert "/transactions/import" in call_args[0][0]
+        assert "2" in result
+        assert "imported" in result.lower()
+        assert "txn-import-001" in result
+        assert "txn-import-002" in result
+
+    @pytest.mark.anyio
+    async def test_import_empty_result(self, mock_ctx, mocker):
+        """Empty import returns 'No transactions to import.'."""
+        mocker.patch(
+            "ynab_mcp.server.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.post.return_value = {
+            "transaction_ids": [],
+        }
+
+        result = await import_transactions(mock_ctx)
+
+        assert "No transactions to import." in result
