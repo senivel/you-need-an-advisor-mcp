@@ -288,5 +288,170 @@ async def get_account(
     return result
 
 
+_GOAL_TYPE_LABELS: dict[str, str] = {
+    "TB": "Target Balance",
+    "TBD": "Target Balance by Date",
+    "MF": "Monthly Funding",
+    "NEED": "Needed for Spending",
+    "DEBT": "Debt",
+}
+"""Human-readable labels for YNAB goal type codes."""
+
+
+@mcp.tool
+async def get_categories(
+    ctx: Context,
+    budget_id_or_name: str | None = None,
+    include_hidden: bool = False,  # noqa: FBT001, FBT002
+) -> str:
+    """List all categories in a YNAB budget grouped by category group.
+
+    Returns a count header followed by an indented hierarchy of category
+    groups and their categories with budgeted, activity, and balance amounts.
+    Deleted groups and categories are always excluded. Hidden categories
+    are excluded by default unless ``include_hidden`` is True.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+        include_hidden: If True, include hidden categories in the list.
+
+    Returns:
+        Structured text with count header and indented hierarchy,
+        or "No categories found." if none exist.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+
+    data = await app.client.get(f"/budgets/{budget_id}/categories")
+    groups = data["category_groups"]
+
+    lines: list[str] = []
+    total_count = 0
+
+    for group in groups:
+        if group["deleted"]:
+            continue
+        if group["hidden"] and not include_hidden:
+            continue
+
+        cats = [c for c in group["categories"] if not c["deleted"]]
+        if not include_hidden:
+            cats = [c for c in cats if not c["hidden"]]
+
+        if not cats:
+            continue
+
+        total_count += len(cats)
+        lines.append(f"\n{group['name']}")
+        for cat in cats:
+            budget_line = (
+                f"    Budgeted: {format_dollars(cat['budgeted'])} | "
+                f"Activity: {format_dollars(cat['activity'])} | "
+                f"Balance: {format_dollars(cat['balance'])}"
+            )
+            lines.extend((
+                f"  - {cat['name']}",
+                budget_line,
+            ))
+
+    if total_count == 0:
+        result = "No categories found."
+        if info:
+            result = f"{info}\n\n{result}"
+        return result
+
+    header = f"{total_count} categories found:"
+    result = header + "\n".join(lines)
+    if info:
+        result = f"{info}\n\n{result}"
+    return result
+
+
+def _format_goal_lines(cat: dict) -> list[str]:
+    """Build goal-info lines for a category detail view.
+
+    Only includes fields that are present (not None). Returns an
+    empty list if the category has no goal set.
+
+    Args:
+        cat: Category dict from the YNAB API response.
+
+    Returns:
+        List of formatted goal lines, or empty list if no goal.
+    """
+    if not cat.get("goal_type"):
+        return []
+
+    label = _GOAL_TYPE_LABELS.get(cat["goal_type"], cat["goal_type"])
+    lines = [f"  Goal: {label}"]
+    if cat.get("goal_target") is not None:
+        lines.append(f"    Target: {format_dollars(cat['goal_target'])}")
+    if cat.get("goal_target_month"):
+        lines.append(f"    Target month: {cat['goal_target_month']}")
+    if cat.get("goal_percentage_complete") is not None:
+        lines.append(f"    Progress: {cat['goal_percentage_complete']}%")
+    if cat.get("goal_months_to_budget") is not None:
+        lines.append(f"    Months to budget: {cat['goal_months_to_budget']}")
+    if cat.get("goal_under_funded") is not None:
+        lines.append(f"    Under funded: {format_dollars(cat['goal_under_funded'])}")
+    if cat.get("goal_overall_funded") is not None:
+        lines.append(
+            f"    Overall funded: {format_dollars(cat['goal_overall_funded'])}"
+        )
+    if cat.get("goal_overall_left") is not None:
+        lines.append(f"    Overall left: {format_dollars(cat['goal_overall_left'])}")
+    return lines
+
+
+@mcp.tool
+async def get_category(
+    ctx: Context,
+    category_id: str,
+    budget_id_or_name: str | None = None,
+) -> str:
+    """Get detailed information about a specific YNAB category.
+
+    Returns all category fields including name, group, budgeted, activity,
+    balance, note (if present), and goal information (if a goal is set).
+    All dollar amounts are formatted with ``$`` symbol and commas.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        category_id: The category UUID.
+        budget_id_or_name: Budget UUID or name. Auto-resolves if only
+            one budget exists.
+
+    Returns:
+        Structured text with full category details and optional goal section.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+
+    data = await app.client.get(f"/budgets/{budget_id}/categories/{category_id}")
+    cat = data["category"]
+
+    lines = [
+        f"Category: {cat['name']}",
+    ]
+    if cat.get("category_group_name"):
+        lines.append(f"  Group: {cat['category_group_name']}")
+    lines.extend((
+        f"  Budgeted: {format_dollars(cat['budgeted'])}",
+        f"  Activity: {format_dollars(cat['activity'])}",
+        f"  Balance: {format_dollars(cat['balance'])}",
+    ))
+    if cat.get("note"):
+        lines.append(f"  Note: {cat['note']}")
+
+    lines.extend(_format_goal_lines(cat))
+
+    result = "\n".join(lines)
+    if info:
+        result = f"{info}\n\n{result}"
+    return result
+
+
 if __name__ == "__main__":
     mcp.run()
