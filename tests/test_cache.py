@@ -1,6 +1,7 @@
 """Tests for CacheStore with delta merging and invalidation."""
 
 import pytest
+
 from ynab_mcp.cache import (
     CROSS_INVALIDATION_MAP,
     DELTA_ENDPOINTS,

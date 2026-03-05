@@ -19,6 +19,7 @@ from fastmcp import Context, FastMCP
 from fastmcp.exceptions import ToolError
 
 from ynab_mcp.budget_resolver import resolve_budget
+from ynab_mcp.cache import CacheStore
 from ynab_mcp.client import YNABClient
 from ynab_mcp.converters import dollars_to_milliunits, format_dollars, normalize_month
 from ynab_mcp.rate_limiter import RateLimiter
@@ -38,9 +39,11 @@ class AppContext:
 
     Attributes:
         client: The YNAB API client instance.
+        cache: The delta cache store for YNAB API responses.
     """
 
     client: YNABClient
+    cache: CacheStore
 
 
 @asynccontextmanager
@@ -78,15 +81,42 @@ async def lifespan(_server: FastMCP) -> AsyncIterator[AppContext]:
         timeout=httpx.Timeout(connect=5.0, read=10.0, write=5.0, pool=5.0),
     ) as http_client:
         rate_limiter = RateLimiter()
-        client = YNABClient(http_client, rate_limiter)
+        cache = CacheStore()
+        client = YNABClient(http_client, rate_limiter, cache=cache)
 
         user_id = await client.validate_token()
         logger.info("Authenticated as user %s", user_id)
 
-        yield AppContext(client=client)
+        yield AppContext(client=client, cache=cache)
 
 
 mcp = FastMCP("YNAB", lifespan=lifespan)
+
+
+@mcp.tool
+def clear_cache(
+    ctx: Context,
+    budget_id: str | None = None,
+) -> str:
+    """Clear cached YNAB data to force fresh API requests.
+
+    Use this if you've made changes in the YNAB app or web interface
+    and want to ensure the latest data is fetched.
+
+    Args:
+        ctx: MCP context.
+        budget_id: Optional budget ID to clear cache for.
+            If not provided, clears all caches.
+
+    Returns:
+        Confirmation message.
+    """
+    app: AppContext = ctx.lifespan_context
+    if budget_id:
+        app.cache.invalidate_budget(budget_id)
+        return f"Cache cleared for budget {budget_id}."
+    app.cache.clear()
+    return "All caches cleared."
 
 
 @mcp.tool

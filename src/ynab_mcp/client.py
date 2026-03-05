@@ -8,6 +8,7 @@ All requests go through this client, which handles:
 - YNAB error response parsing into ``YNABAPIError``
 - Data envelope unwrapping (``response["data"]``)
 - Milliunit-to-dollar conversion on response fields
+- Delta request caching for supported endpoints
 """
 
 import logging
@@ -17,6 +18,7 @@ from typing import Any
 import httpx
 from fastmcp.exceptions import ToolError
 
+from ynab_mcp.cache import CacheStore, cache_key_from_path, strip_server_knowledge
 from ynab_mcp.converters import milliunits_to_dollars
 from ynab_mcp.errors import YNABAPIError
 from ynab_mcp.rate_limiter import RateLimiter
@@ -73,12 +75,15 @@ class YNABClient:
     Attributes:
         _http: The injected httpx async client.
         _rate_limiter: The rate limiter instance.
+        _cache: Optional delta cache store for reducing API calls.
     """
 
     def __init__(
         self,
         http_client: httpx.AsyncClient,
         rate_limiter: RateLimiter,
+        *,
+        cache: CacheStore | None = None,
     ) -> None:
         """Initialize the YNAB client with injected dependencies.
 
@@ -86,9 +91,11 @@ class YNABClient:
             http_client: An httpx.AsyncClient pre-configured with base URL
                 and authorization headers.
             rate_limiter: A RateLimiter instance for tracking API usage.
+            cache: Optional CacheStore for delta request caching.
         """
         self._http = http_client
         self._rate_limiter = rate_limiter
+        self._cache = cache
 
     async def validate_token(self) -> str:
         """Validate the YNAB personal access token by calling GET /user.
@@ -150,19 +157,48 @@ class YNABClient:
 
         json_data: dict[str, Any] = response.json()
         data: dict[str, Any] = json_data["data"]
-        return self._convert_milliunits(data)
+        converted: dict[str, Any] = self._convert_milliunits(data)
+
+        if method != "GET" and self._cache:
+            self._cache.invalidate_for_mutation(path)
+
+        return converted
 
     async def get(self, path: str, **kwargs: JSONValue) -> dict[str, Any]:
-        """Send a GET request to the YNAB API.
+        """Send a GET request, using delta cache when available.
+
+        For delta-capable endpoints, injects ``last_knowledge_of_server``
+        when cached knowledge exists, and merges delta responses into the
+        cache. Strips ``server_knowledge`` from returned data.
 
         Args:
             path: API path relative to base URL.
             **kwargs: Additional keyword arguments passed to httpx.
 
         Returns:
-            The unwrapped and converted response data.
+            The unwrapped and converted response data, with
+            ``server_knowledge`` stripped if present.
         """
-        return await self.request("GET", path, **kwargs)
+        cache_key = cache_key_from_path(path) if self._cache else None
+
+        if cache_key and self._cache:
+            knowledge = self._cache.get_knowledge(cache_key)
+            if knowledge is not None:
+                params = dict(kwargs.get("params") or {})
+                params["last_knowledge_of_server"] = knowledge
+                kwargs["params"] = params
+
+        data = await self.request("GET", path, **kwargs)
+
+        if cache_key and self._cache and "server_knowledge" in data:
+            sk = data["server_knowledge"]
+            if self._cache.get_cached_data(cache_key) is not None:
+                self._cache.merge_delta(cache_key, sk, strip_server_knowledge(data))
+            else:
+                self._cache.update(cache_key, sk, strip_server_knowledge(data))
+            return strip_server_knowledge(data)
+
+        return data
 
     async def post(self, path: str, **kwargs: JSONValue) -> dict[str, Any]:
         """Send a POST request to the YNAB API.

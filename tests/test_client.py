@@ -7,6 +7,7 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 import ynab_mcp.client as client_module
+from ynab_mcp.cache import CacheStore
 from ynab_mcp.client import MILLIUNIT_FIELDS, YNABClient
 from ynab_mcp.errors import YNABAPIError
 from ynab_mcp.rate_limiter import RateLimiter
@@ -368,14 +369,20 @@ class TestCacheIntegration:
 
     @pytest.fixture
     def cache(self):
-        """Create a fresh CacheStore."""
-        from ynab_mcp.cache import CacheStore
+        """Create a fresh CacheStore.
 
+        Returns:
+            A new CacheStore instance.
+        """
         return CacheStore()
 
     @pytest.fixture
     def cached_client(self, mock_http_client, mock_rate_limiter, cache):
-        """Create a YNABClient with cache enabled."""
+        """Create a YNABClient with cache enabled.
+
+        Returns:
+            A YNABClient configured with mocked deps and cache.
+        """
         return YNABClient(
             http_client=mock_http_client,
             rate_limiter=mock_rate_limiter,
