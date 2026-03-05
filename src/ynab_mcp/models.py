@@ -336,6 +336,44 @@ class ScheduledTransactionDetail(BaseModel):
     subtransactions: list[ScheduledSubTransaction] = []
 
 
+class Payee(BaseModel):
+    """A YNAB payee.
+
+    Attributes:
+        id: Payee UUID.
+        name: Payee display name.
+        transfer_account_id: Account UUID if this is a transfer payee.
+        deleted: Whether payee is deleted.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    name: str
+    transfer_account_id: str | None = None
+    deleted: bool
+
+
+class PayeeLocation(BaseModel):
+    """A YNAB payee location (GPS data from mobile apps).
+
+    Attributes:
+        id: Payee location UUID.
+        payee_id: Parent payee UUID.
+        latitude: GPS latitude, or None if not set.
+        longitude: GPS longitude, or None if not set.
+        deleted: Whether payee location is deleted.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    payee_id: str
+    latitude: float | None = None
+    longitude: float | None = None
+    deleted: bool
+
+
 class UserResponse(BaseModel):
     """Response for the GET /user endpoint.
 
