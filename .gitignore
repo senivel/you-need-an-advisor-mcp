@@ -165,18 +165,26 @@ cython_debug/
 # Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration
 poetry.toml
 
-# ruff
+# caches
 .ruff_cache/
+.pytest_cache/
+.hypothesis/
+.prettier_cache
 
 # LSP config files
 pyrightconfig.json
 
 # Claude
+.claude/
 .claude/settings.local.json
 .claude/worktrees
 
 # MCP servers
 .codegraph/
+
+# Specs
+.planning/
+.specify
 
 # Node
 ./**/node_modules/
