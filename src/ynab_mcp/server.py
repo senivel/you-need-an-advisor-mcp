@@ -1953,5 +1953,10 @@ async def list_money_movement_groups(
     return "\n".join(lines)
 
 
+# Import resource and prompt modules to register their decorators on `mcp`.
+# Must be at bottom to avoid circular imports (these modules import `mcp` from here).
+import ynab_mcp.resources  # noqa: E402, F401
+
+
 if __name__ == "__main__":
     mcp.run()
