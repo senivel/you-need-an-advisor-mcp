@@ -1,13 +1,18 @@
 """Tests for MCP Prompt templates: spending review, transaction entry, health check."""
 
+import ynab_mcp.prompts as prompts_module
+from ynab_mcp.prompts import (
+    budget_health_check,
+    enter_transactions,
+    review_monthly_spending,
+)
+
 
 class TestReviewMonthlySpending:
     """Tests for review_monthly_spending prompt."""
 
     def test_returns_string(self):
         """Prompt returns a non-empty string."""
-        from ynab_mcp.prompts import review_monthly_spending
-
         result = review_monthly_spending(month="2026-03")
 
         assert isinstance(result, str)
@@ -15,8 +20,6 @@ class TestReviewMonthlySpending:
 
     def test_references_tools(self):
         """Output mentions required tool names."""
-        from ynab_mcp.prompts import review_monthly_spending
-
         result = review_monthly_spending(month="2026-03")
 
         assert "list_transactions" in result
@@ -24,8 +27,6 @@ class TestReviewMonthlySpending:
 
     def test_references_resources(self):
         """Output mentions ynab:// resource URI."""
-        from ynab_mcp.prompts import review_monthly_spending
-
         result = review_monthly_spending(
             month="2026-03",
             budget_id="budget-123",
@@ -35,8 +36,6 @@ class TestReviewMonthlySpending:
 
     def test_with_budget_id(self):
         """Budget ID is included in output when provided."""
-        from ynab_mcp.prompts import review_monthly_spending
-
         result = review_monthly_spending(
             month="2026-03",
             budget_id="budget-123",
@@ -46,8 +45,6 @@ class TestReviewMonthlySpending:
 
     def test_without_budget_id(self):
         """Fallback instruction to resolve budget when not provided."""
-        from ynab_mcp.prompts import review_monthly_spending
-
         result = review_monthly_spending(month="2026-03")
 
         assert "list_budgets" in result
@@ -58,24 +55,18 @@ class TestEnterTransactions:
 
     def test_references_create_tool(self):
         """Output mentions create_transaction tool."""
-        from ynab_mcp.prompts import enter_transactions
-
         result = enter_transactions()
 
         assert "create_transaction" in result
 
     def test_with_budget_id(self):
         """Budget ID is included in output when provided."""
-        from ynab_mcp.prompts import enter_transactions
-
         result = enter_transactions(budget_id="budget-456")
 
         assert "budget-456" in result
 
     def test_without_budget_id(self):
         """Fallback instruction when no budget_id."""
-        from ynab_mcp.prompts import enter_transactions
-
         result = enter_transactions()
 
         assert "list_budgets" in result
@@ -86,8 +77,6 @@ class TestBudgetHealthCheck:
 
     def test_returns_string(self):
         """Prompt returns a non-empty string."""
-        from ynab_mcp.prompts import budget_health_check
-
         result = budget_health_check()
 
         assert isinstance(result, str)
@@ -95,16 +84,12 @@ class TestBudgetHealthCheck:
 
     def test_with_budget_id(self):
         """Budget ID included when provided."""
-        from ynab_mcp.prompts import budget_health_check
-
         result = budget_health_check(budget_id="budget-789")
 
         assert "budget-789" in result
 
     def test_without_budget_id(self):
         """Fallback instruction when no budget_id."""
-        from ynab_mcp.prompts import budget_health_check
-
         result = budget_health_check()
 
         assert "list_budgets" in result
@@ -115,15 +100,12 @@ class TestPromptRegistration:
 
     def test_at_least_two_prompts_registered(self):
         """At least 2 prompt functions exist in the module."""
-        import ynab_mcp.prompts as prompts_module
-
         prompt_funcs = [
             name
             for name in dir(prompts_module)
-            if not name.startswith("_") and callable(getattr(prompts_module, name))
+            if not name.startswith("_")
+            and callable(getattr(prompts_module, name))
+            and name != "mcp"
         ]
-
-        # Exclude the imported mcp object
-        prompt_funcs = [name for name in prompt_funcs if name != "mcp"]
 
         assert len(prompt_funcs) >= 2

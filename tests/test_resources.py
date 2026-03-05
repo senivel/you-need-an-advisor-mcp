@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from ynab_mcp.resources import budget_accounts, budget_categories, budget_payees
+
 
 @pytest.fixture
 def mock_ctx(mocker):
@@ -58,8 +60,6 @@ class TestBudgetAccounts:
             ],
         }
 
-        from ynab_mcp.resources import budget_accounts
-
         result = await budget_accounts("budget-123", mock_ctx)
         data = json.loads(result)
 
@@ -86,8 +86,6 @@ class TestBudgetAccounts:
             ],
         }
 
-        from ynab_mcp.resources import budget_accounts
-
         result = await budget_accounts("budget-123", mock_ctx)
         data = json.loads(result)
 
@@ -110,8 +108,6 @@ class TestBudgetAccounts:
             ],
         }
 
-        from ynab_mcp.resources import budget_accounts
-
         result = await budget_accounts("budget-123", mock_ctx)
         parsed = json.loads(result)
 
@@ -122,7 +118,10 @@ class TestBudgetCategories:
     """Tests for budget_categories resource."""
 
     @pytest.mark.anyio
-    async def test_budget_categories_filters_deleted_and_hidden(self, mock_ctx):
+    async def test_budget_categories_filters_deleted_and_hidden(
+        self,
+        mock_ctx,
+    ):
         """Deleted groups, deleted categories, and hidden categories excluded."""
         mock_ctx.lifespan_context.client.get.return_value = {
             "category_groups": [
@@ -179,8 +178,6 @@ class TestBudgetCategories:
             ],
         }
 
-        from ynab_mcp.resources import budget_categories
-
         result = await budget_categories("budget-123", mock_ctx)
         data = json.loads(result)
 
@@ -229,8 +226,6 @@ class TestBudgetCategories:
             ],
         }
 
-        from ynab_mcp.resources import budget_categories
-
         result = await budget_categories("budget-123", mock_ctx)
         data = json.loads(result)
 
@@ -261,8 +256,6 @@ class TestBudgetCategories:
             ],
         }
 
-        from ynab_mcp.resources import budget_categories
-
         result = await budget_categories("budget-123", mock_ctx)
         parsed = json.loads(result)
 
@@ -273,7 +266,10 @@ class TestBudgetPayees:
     """Tests for budget_payees resource."""
 
     @pytest.mark.anyio
-    async def test_budget_payees_filters_deleted_and_transfers(self, mock_ctx):
+    async def test_budget_payees_filters_deleted_and_transfers(
+        self,
+        mock_ctx,
+    ):
         """Deleted payees and transfer payees are excluded."""
         mock_ctx.lifespan_context.client.get.return_value = {
             "payees": [
@@ -304,8 +300,6 @@ class TestBudgetPayees:
             ],
         }
 
-        from ynab_mcp.resources import budget_payees
-
         result = await budget_payees("budget-123", mock_ctx)
         data = json.loads(result)
 
@@ -329,8 +323,6 @@ class TestBudgetPayees:
                 },
             ],
         }
-
-        from ynab_mcp.resources import budget_payees
 
         result = await budget_payees("budget-123", mock_ctx)
         parsed = json.loads(result)

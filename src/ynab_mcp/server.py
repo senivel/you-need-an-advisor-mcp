@@ -1955,6 +1955,7 @@ async def list_money_movement_groups(
 
 # Import resource and prompt modules to register their decorators on `mcp`.
 # Must be at bottom to avoid circular imports (these modules import `mcp` from here).
+import ynab_mcp.prompts  # noqa: E402, F401
 import ynab_mcp.resources  # noqa: E402, F401
 
 
