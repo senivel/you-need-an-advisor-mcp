@@ -39,6 +39,10 @@ MILLIUNIT_FIELDS: frozenset[str] = frozenset({
     "goal_target",
     "goal_overall_left",
     "goal_under_funded",
+    "allocation",
+    "spent",
+    "income",
+    "to_be_budgeted",
 })
 """Field names that contain milliunit values in YNAB API responses."""
 

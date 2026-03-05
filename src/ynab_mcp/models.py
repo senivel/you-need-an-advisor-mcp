@@ -374,6 +374,92 @@ class PayeeLocation(BaseModel):
     deleted: bool
 
 
+class MonthSummary(BaseModel):
+    """A YNAB budget month summary.
+
+    Attributes:
+        month: Month date string (YYYY-MM-DD).
+        income: Total income in dollars.
+        budgeted: Total budgeted in dollars.
+        activity: Total activity in dollars.
+        to_be_budgeted: Amount available to budget in dollars.
+        age_of_money: Age of money in days, or None.
+        deleted: Whether month is deleted.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    month: str
+    income: float
+    budgeted: float
+    activity: float
+    to_be_budgeted: float
+    age_of_money: int | None = None
+    deleted: bool
+
+
+class MonthDetail(BaseModel):
+    """A YNAB budget month with category breakdown.
+
+    Attributes:
+        month: Month date string (YYYY-MM-DD).
+        income: Total income in dollars.
+        budgeted: Total budgeted in dollars.
+        activity: Total activity in dollars.
+        to_be_budgeted: Amount available to budget in dollars.
+        age_of_money: Age of money in days, or None.
+        categories: List of categories for this month.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    month: str
+    income: float
+    budgeted: float
+    activity: float
+    to_be_budgeted: float
+    age_of_money: int | None = None
+    categories: list[Category] = []
+
+
+class MoneyMovement(BaseModel):
+    """A YNAB money movement entry (per-category).
+
+    Attributes:
+        category_name: Category display name.
+        category_group_name: Category group name, or None.
+        allocation: Allocation amount in dollars.
+        spent: Spent amount in dollars.
+        income: Income amount in dollars.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    category_name: str
+    category_group_name: str | None = None
+    allocation: float
+    spent: float
+    income: float
+
+
+class MoneyMovementGroup(BaseModel):
+    """A YNAB money movement group entry (per-category-group).
+
+    Attributes:
+        category_group_name: Category group display name.
+        allocation: Allocation amount in dollars.
+        spent: Spent amount in dollars.
+        income: Income amount in dollars.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    category_group_name: str
+    allocation: float
+    spent: float
+    income: float
+
+
 class UserResponse(BaseModel):
     """Response for the GET /user endpoint.
 

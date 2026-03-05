@@ -7,7 +7,7 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 import ynab_mcp.client as client_module
-from ynab_mcp.client import YNABClient
+from ynab_mcp.client import MILLIUNIT_FIELDS, YNABClient
 from ynab_mcp.errors import YNABAPIError
 from ynab_mcp.rate_limiter import RateLimiter
 
@@ -322,6 +322,26 @@ class TestDeleteMethod:
     async def test_delete_is_async(self, client):
         """delete() is a coroutine function."""
         assert inspect.iscoroutinefunction(client.delete)
+
+
+class TestMilliunitFieldDetection:
+    """Tests for MILLIUNIT_FIELDS with money movement fields."""
+
+    def test_allocation_in_milliunit_fields(self):
+        """Allocation is recognized as a milliunit field."""
+        assert "allocation" in MILLIUNIT_FIELDS
+
+    def test_spent_in_milliunit_fields(self):
+        """Spent is recognized as a milliunit field."""
+        assert "spent" in MILLIUNIT_FIELDS
+
+    def test_income_in_milliunit_fields(self):
+        """Income is recognized as a milliunit field."""
+        assert "income" in MILLIUNIT_FIELDS
+
+    def test_to_be_budgeted_in_milliunit_fields(self):
+        """Field to_be_budgeted is recognized as a milliunit field."""
+        assert "to_be_budgeted" in MILLIUNIT_FIELDS
 
 
 class TestStdoutCompliance:
