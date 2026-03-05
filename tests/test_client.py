@@ -361,3 +361,179 @@ class TestStdoutCompliance:
         """Client uses logging module for any log output."""
         source = inspect.getsource(client_module)
         assert "import logging" in source or "from logging" in source
+
+
+class TestCacheIntegration:
+    """Tests for delta cache integration in YNABClient."""
+
+    @pytest.fixture
+    def cache(self):
+        """Create a fresh CacheStore."""
+        from ynab_mcp.cache import CacheStore
+
+        return CacheStore()
+
+    @pytest.fixture
+    def cached_client(self, mock_http_client, mock_rate_limiter, cache):
+        """Create a YNABClient with cache enabled."""
+        return YNABClient(
+            http_client=mock_http_client,
+            rate_limiter=mock_rate_limiter,
+            cache=cache,
+        )
+
+    @pytest.mark.anyio
+    async def test_get_delta_endpoint_stores_response(
+        self, cached_client, mock_http_client, cache
+    ):
+        """First GET to delta endpoint stores data in cache."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={
+                "data": {
+                    "accounts": [{"id": "a1", "name": "Checking", "balance": 50000}],
+                    "server_knowledge": 10,
+                }
+            },
+        )
+
+        await cached_client.get("/budgets/b1/accounts")
+
+        assert cache.get_knowledge("b1:accounts") == 10
+        cached_data = cache.get_cached_data("b1:accounts")
+        assert cached_data is not None
+        assert len(cached_data["accounts"]) == 1
+
+    @pytest.mark.anyio
+    async def test_get_delta_endpoint_injects_knowledge(
+        self, cached_client, mock_http_client, cache
+    ):
+        """Second GET to delta endpoint injects last_knowledge_of_server."""
+        # Seed cache with prior knowledge
+        cache.update(
+            "b1:accounts", 10, {"accounts": [{"id": "a1", "name": "Checking"}]}
+        )
+
+        mock_http_client.request.return_value = _make_response(
+            json_data={
+                "data": {
+                    "accounts": [],
+                    "server_knowledge": 10,
+                }
+            },
+        )
+
+        await cached_client.get("/budgets/b1/accounts")
+
+        call_kwargs = mock_http_client.request.call_args[1]
+        assert call_kwargs["params"]["last_knowledge_of_server"] == 10
+
+    @pytest.mark.anyio
+    async def test_get_delta_endpoint_merges_on_second_call(
+        self, cached_client, mock_http_client, cache
+    ):
+        """Second GET merges delta into existing cache."""
+        # Seed cache
+        cache.update(
+            "b1:accounts",
+            10,
+            {"accounts": [{"id": "a1", "name": "Checking", "balance": 100.0}]},
+        )
+
+        # Delta response with updated entity + new entity
+        mock_http_client.request.return_value = _make_response(
+            json_data={
+                "data": {
+                    "accounts": [
+                        {"id": "a1", "name": "Checking", "balance": 200.0},
+                        {"id": "a2", "name": "Savings", "balance": 500.0},
+                    ],
+                    "server_knowledge": 15,
+                }
+            },
+        )
+
+        await cached_client.get("/budgets/b1/accounts")
+
+        assert cache.get_knowledge("b1:accounts") == 15
+        cached_data = cache.get_cached_data("b1:accounts")
+        assert len(cached_data["accounts"]) == 2
+
+    @pytest.mark.anyio
+    async def test_get_strips_server_knowledge(self, cached_client, mock_http_client):
+        """Returned data does not contain server_knowledge key."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={
+                "data": {
+                    "accounts": [{"id": "a1", "name": "Checking"}],
+                    "server_knowledge": 10,
+                }
+            },
+        )
+
+        result = await cached_client.get("/budgets/b1/accounts")
+
+        assert "server_knowledge" not in result
+
+    @pytest.mark.anyio
+    async def test_get_non_delta_endpoint_no_cache(
+        self, cached_client, mock_http_client, cache
+    ):
+        """Non-delta endpoints bypass cache entirely."""
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"user": {"id": "abc"}}},
+        )
+
+        result = await cached_client.get("/user")
+
+        assert result == {"user": {"id": "abc"}}
+        # No cache entries created
+        assert cache.get_knowledge("user") is None
+
+    @pytest.mark.anyio
+    async def test_mutation_invalidates_cache(
+        self, cached_client, mock_http_client, cache
+    ):
+        """POST/PUT/PATCH/DELETE triggers cache invalidation."""
+        # Seed cache
+        cache.update("b1:transactions", 10, {"transactions": []})
+        cache.update("b1:accounts", 10, {"accounts": []})
+
+        mock_http_client.request.return_value = _make_response(
+            json_data={"data": {"transaction": {"id": "t1"}}},
+        )
+
+        await cached_client.post(
+            "/budgets/b1/transactions",
+            json={"transaction": {"amount": -50000}},
+        )
+
+        # Direct + cross-resource invalidation
+        assert cache.get_cached_data("b1:transactions") is None
+        assert cache.get_cached_data("b1:accounts") is None
+
+    @pytest.mark.anyio
+    async def test_client_without_cache_works(
+        self, mock_http_client, mock_rate_limiter
+    ):
+        """YNABClient with cache=None works exactly as before."""
+        client_no_cache = YNABClient(
+            http_client=mock_http_client,
+            rate_limiter=mock_rate_limiter,
+        )
+
+        mock_http_client.request.return_value = _make_response(
+            json_data={
+                "data": {
+                    "accounts": [{"id": "a1", "name": "Checking"}],
+                    "server_knowledge": 10,
+                }
+            },
+        )
+
+        result = await client_no_cache.get("/budgets/b1/accounts")
+
+        # server_knowledge should still be present since no cache to strip it
+        assert result == {
+            "accounts": [{"id": "a1", "name": "Checking"}],
+            "server_knowledge": 10,
+        }
