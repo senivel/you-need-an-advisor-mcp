@@ -262,6 +262,80 @@ class TransactionDetail(BaseModel):
     subtransactions: list[SubTransaction] = []
 
 
+class ScheduledSubTransaction(BaseModel):
+    """A YNAB scheduled sub-transaction (split component).
+
+    Attributes:
+        id: Sub-transaction UUID.
+        scheduled_transaction_id: Parent scheduled transaction UUID.
+        amount: Amount in dollars (converted from milliunits).
+        deleted: Whether sub-transaction is deleted.
+        payee_id: Payee UUID.
+        payee_name: Payee display name.
+        category_id: Category UUID.
+        category_name: Category display name.
+        memo: Optional memo text.
+        transfer_account_id: Account UUID if this is a transfer.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    scheduled_transaction_id: str
+    amount: float
+    deleted: bool
+    payee_id: str | None = None
+    payee_name: str | None = None
+    category_id: str | None = None
+    category_name: str | None = None
+    memo: str | None = None
+    transfer_account_id: str | None = None
+
+
+class ScheduledTransactionDetail(BaseModel):
+    """A detailed YNAB scheduled transaction.
+
+    Attributes:
+        id: Scheduled transaction UUID.
+        date_first: First occurrence date (YYYY-MM-DD).
+        date_next: Next occurrence date (YYYY-MM-DD), None if completed.
+        frequency: Recurrence frequency (never, daily, weekly, etc.).
+        amount: Amount in dollars (converted from milliunits).
+        account_id: Account UUID.
+        account_name: Account display name.
+        deleted: Whether scheduled transaction is deleted.
+        payee_id: Payee UUID.
+        payee_name: Payee display name.
+        category_id: Category UUID.
+        category_name: Category display name.
+        memo: Optional memo text.
+        flag_color: Flag color for the scheduled transaction.
+        flag_name: Flag name for the scheduled transaction.
+        transfer_account_id: Account UUID if this is a transfer.
+        subtransactions: List of scheduled sub-transactions (splits).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: str
+    date_first: str
+    date_next: str | None = None
+    frequency: str
+    amount: float
+    account_id: str
+    account_name: str
+    deleted: bool
+    payee_id: str | None = None
+    payee_name: str | None = None
+    category_id: str | None = None
+    category_name: str | None = None
+    memo: str | None = None
+    flag_color: str | None = None
+    flag_name: str | None = None
+    transfer_account_id: str | None = None
+    subtransactions: list[ScheduledSubTransaction] = []
+
+
 class UserResponse(BaseModel):
     """Response for the GET /user endpoint.
 
