@@ -8,6 +8,11 @@
         {
           "type": "generic",
           "path": "src/ynaa_mcp/__init__.py"
+        },
+        {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "jsonpath": "$.project.version"
         }
       ]
     }
