@@ -1,6 +1,7 @@
 """Tests for MCP workflow guide prompts."""
 
 import pytest
+
 import ynab_mcp.workflows as workflows_module
 from ynab_mcp.workflows import (
     breaking_paycheck_to_paycheck,
@@ -28,7 +29,11 @@ ALL_WORKFLOWS = [
 
 @pytest.fixture(params=ALL_WORKFLOWS, ids=[w[0] for w in ALL_WORKFLOWS])
 def workflow_fn(request):
-    """Yield each workflow function in turn."""
+    """Yield each workflow function in turn.
+
+    Returns:
+        The workflow callable for the current parametrize iteration.
+    """
     return request.param[1]
 
 
