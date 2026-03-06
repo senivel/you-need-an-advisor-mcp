@@ -10,11 +10,11 @@ hidden items, and payees exclude transfer payees.
 """
 
 import json
-from typing import Any
+from typing import Any, cast
 
 from fastmcp import Context
 
-from ynab_mcp.app import mcp
+from ynab_mcp.app import AppContext, mcp
 
 
 @mcp.resource("ynab://budgets/{budget_id}/accounts")
@@ -31,7 +31,7 @@ async def budget_accounts(budget_id: str, ctx: Context) -> str:
     Returns:
         JSON string of account objects.
     """
-    app = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     data: dict[str, Any] = await app.client.get(
         f"/budgets/{budget_id}/accounts",
     )
@@ -69,12 +69,12 @@ async def budget_categories(budget_id: str, ctx: Context) -> str:
     Returns:
         JSON string of category group objects.
     """
-    app = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     data: dict[str, Any] = await app.client.get(
         f"/budgets/{budget_id}/categories",
     )
 
-    groups = []
+    groups: list[dict[str, Any]] = []
     for group in data["category_groups"]:
         if group["deleted"]:
             continue
@@ -115,7 +115,7 @@ async def budget_payees(budget_id: str, ctx: Context) -> str:
     Returns:
         JSON string of payee objects.
     """
-    app = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     data: dict[str, Any] = await app.client.get(
         f"/budgets/{budget_id}/payees",
     )

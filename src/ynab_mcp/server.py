@@ -1,15 +1,16 @@
 """MCP server wiring: imports tool/prompt/resource modules to register handlers."""
 
-import ynab_mcp.prompts
-import ynab_mcp.resources
-import ynab_mcp.tools.accounts
-import ynab_mcp.tools.budgets
-import ynab_mcp.tools.cache
-import ynab_mcp.tools.categories
-import ynab_mcp.tools.months
-import ynab_mcp.tools.payees
-import ynab_mcp.tools.scheduled
-import ynab_mcp.tools.transactions
+# Side-effect imports: each module registers MCP handlers at import time.
+import ynab_mcp.prompts  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.resources  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.accounts  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.budgets  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.cache  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.categories  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.months  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.payees  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.scheduled  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.tools.transactions  # pyright: ignore[reportUnusedImport]
 from ynab_mcp.app import AppContext, lifespan, mcp
 
 

@@ -7,7 +7,7 @@ tool function.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ def get_app(ctx: Context) -> AppContext:
     Returns:
         The AppContext instance with client and cache.
     """
-    return ctx.lifespan_context
+    return cast("AppContext", ctx.lifespan_context)
 
 
 def get_client(ctx: Context) -> YNABClient:
@@ -39,7 +39,7 @@ def get_client(ctx: Context) -> YNABClient:
     Returns:
         The authenticated YNABClient instance.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     return app.client
 
 
@@ -52,5 +52,5 @@ def get_cache(ctx: Context) -> CacheStore:
     Returns:
         The CacheStore instance.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     return app.cache

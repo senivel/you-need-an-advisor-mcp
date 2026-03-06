@@ -15,7 +15,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 
 logger = logging.getLogger(__name__)
@@ -159,12 +159,13 @@ class CacheStore:
                 existing[key] = value
                 continue
 
+            entity_list = cast("list[dict[str, Any]]", value)
             if key == "category_groups":
-                self._merge_category_groups(existing, value)
+                self._merge_category_groups(existing, entity_list)
             else:
                 existing[key] = self._merge_entity_list(
                     existing.get(key, []),
-                    value,
+                    entity_list,
                 )
 
         self._entries[cache_key] = CacheEntry(

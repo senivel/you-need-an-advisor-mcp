@@ -13,7 +13,7 @@ All requests go through this client, which handles:
 
 import logging
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from fastmcp.exceptions import ToolError
@@ -111,7 +111,7 @@ class YNABClient:
         self,
         method: str,
         path: str,
-        **kwargs: JSONValue,
+        **kwargs: Any,  # noqa: ANN401
     ) -> dict[str, Any]:
         """Send a request to the YNAB API with rate limiting and conversion.
 
@@ -126,7 +126,8 @@ class YNABClient:
         Args:
             method: HTTP method (GET, POST, PUT, PATCH, DELETE).
             path: API path relative to base URL (e.g., ``/user``).
-            **kwargs: Additional keyword arguments passed to httpx.
+            **kwargs: Additional keyword arguments passed to httpx
+                (Any required -- httpx accepts diverse parameter types).
 
         Returns:
             The unwrapped ``data`` dict from the YNAB response with
@@ -157,7 +158,7 @@ class YNABClient:
 
         json_data: dict[str, Any] = response.json()
         data: dict[str, Any] = json_data["data"]
-        converted: dict[str, Any] = self._convert_milliunits(data)
+        converted = cast("dict[str, Any]", self._convert_milliunits(data))
 
         if method != "GET" and self._cache:
             self._cache.invalidate_for_mutation(path)
@@ -184,7 +185,12 @@ class YNABClient:
         if cache_key and self._cache:
             knowledge = self._cache.get_knowledge(cache_key)
             if knowledge is not None:
-                params = dict(kwargs.get("params") or {})
+                existing_params = kwargs.get("params")
+                params: dict[str, Any] = (
+                    dict(cast("dict[str, Any]", existing_params))
+                    if existing_params
+                    else {}
+                )
                 params["last_knowledge_of_server"] = knowledge
                 kwargs["params"] = params
 

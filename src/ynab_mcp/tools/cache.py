@@ -1,5 +1,7 @@
 """Cache management tool: clear cached YNAB data."""
 
+from typing import cast
+
 from fastmcp import Context
 
 from ynab_mcp.app import AppContext, mcp
@@ -23,7 +25,7 @@ def clear_cache(
     Returns:
         Confirmation message.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     if budget_id:
         app.cache.invalidate_budget(budget_id)
         return f"Cache cleared for budget {budget_id}."

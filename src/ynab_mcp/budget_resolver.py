@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.models import BudgetsResponse
+from ynab_mcp.models import BudgetsResponse, BudgetSummary
 
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ async def resolve_budget(
 
 
 def _resolve_without_identifier(
-    budgets: list,
+    budgets: list[BudgetSummary],
 ) -> tuple[str, str | None]:
     """Resolve when no identifier is provided.
 
@@ -102,7 +102,7 @@ def _resolve_without_identifier(
 
 
 def _resolve_with_identifier(
-    budgets: list,
+    budgets: list[BudgetSummary],
     budget_id_or_name: str,
 ) -> tuple[str, str | None]:
     """Resolve using a UUID or fuzzy name match.

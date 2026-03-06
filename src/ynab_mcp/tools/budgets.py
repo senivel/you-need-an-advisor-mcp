@@ -1,6 +1,6 @@
 """Budget tools: list budgets, get budget detail, get user info."""
 
-from typing import Literal
+from typing import Literal, cast
 
 from fastmcp import Context
 
@@ -108,7 +108,7 @@ async def manage_budgets(
     Returns:
         Structured text with budget or user information.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
 
     if action == "list":
         return await _list_budgets(app)

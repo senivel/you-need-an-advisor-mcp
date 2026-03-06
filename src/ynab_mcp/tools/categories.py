@@ -1,6 +1,6 @@
 """Category tools: list, detail, create/update categories and groups."""
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -23,7 +23,7 @@ _MAX_GROUP_NAME_LENGTH = 50
 """Maximum character length for a category group name."""
 
 
-def _format_goal_lines(cat: dict) -> list[str]:
+def _format_goal_lines(cat: dict[str, Any]) -> list[str]:
     """Build goal-info lines for a category detail view.
 
     Args:
@@ -153,7 +153,7 @@ async def _create_category(  # noqa: PLR0913
     Returns:
         Confirmation text with created category details.
     """
-    body: dict = {"name": name}
+    body: dict[str, Any] = {"name": name}
     if category_group_id is not None:
         body["category_group_id"] = category_group_id
     if note is not None:
@@ -185,7 +185,7 @@ async def _update_category(  # noqa: PLR0913
     Returns:
         Confirmation text with updated category details.
     """
-    body: dict = {}
+    body: dict[str, Any] = {}
     if name is not None:
         body["name"] = name
     if note is not None:
@@ -359,7 +359,7 @@ async def manage_categories(  # noqa: PLR0913, PLR0917, C901, PLR0911
     Raises:
         ToolError: If required parameters for the action are missing.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     budget_id, info = await resolve_budget(app.client, budget_id_or_name)
 
     if action == "list":

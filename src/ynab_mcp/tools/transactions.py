@@ -1,6 +1,6 @@
 """Transaction tools: consolidated manage_transactions dispatch."""
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -18,7 +18,7 @@ _CLEARED_INDICATORS: dict[str, str] = {
 """Compact status indicators for transaction list view."""
 
 
-def _format_transaction_line(txn: dict) -> list[str]:
+def _format_transaction_line(txn: dict[str, Any]) -> list[str]:
     """Format a single transaction for list view.
 
     Each transaction produces two lines: a summary line with date, payee,
@@ -40,7 +40,7 @@ def _format_transaction_line(txn: dict) -> list[str]:
     ]
 
 
-def _format_transaction_detail(txn: dict) -> list[str]:
+def _format_transaction_detail(txn: dict[str, Any]) -> list[str]:
     """Format a single transaction for detail view.
 
     Includes all fields with optional ones only shown when present.
@@ -80,7 +80,7 @@ def _format_transaction_detail(txn: dict) -> list[str]:
     return lines
 
 
-def _format_transaction_confirmation(verb: str, txn: dict) -> str:
+def _format_transaction_confirmation(verb: str, txn: dict[str, Any]) -> str:
     """Format a transaction create/update/delete confirmation.
 
     Args:
@@ -103,7 +103,7 @@ def _format_transaction_confirmation(verb: str, txn: dict) -> str:
     return "\n".join(lines)
 
 
-def _format_batch_result(data: dict, verb: str) -> str:
+def _format_batch_result(data: dict[str, Any], verb: str) -> str:
     """Format a batch transaction create/update response.
 
     Args:
@@ -250,7 +250,7 @@ async def _create_transaction(  # noqa: PLR0913, PLR0917, C901
     Raises:
         ToolError: If required fields are missing.
     """
-    missing = []
+    missing: list[str] = []
     if account_id is None:
         missing.append("account_id")
     if date is None:
@@ -261,7 +261,12 @@ async def _create_transaction(  # noqa: PLR0913, PLR0917, C901
         msg = f"Create requires: {', '.join(missing)}"
         raise ToolError(msg)
 
-    optional_fields: dict[str, str | bool] = {}
+    # Narrowing: pyright can't track list-based None checks, assert after guard
+    assert account_id is not None
+    assert date is not None
+    assert amount is not None
+
+    optional_fields: dict[str, Any] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
     if payee_id is not None:
@@ -277,10 +282,10 @@ async def _create_transaction(  # noqa: PLR0913, PLR0917, C901
     if flag_color is not None:
         optional_fields["flag_color"] = flag_color
 
-    body: dict = {
+    body: dict[str, Any] = {
         "account_id": account_id,
         "date": date,
-        "amount": dollars_to_milliunits(amount),  # type: ignore[arg-type]
+        "amount": dollars_to_milliunits(amount),
         **optional_fields,
     }
 
@@ -312,7 +317,7 @@ async def _update_transaction(  # noqa: PLR0913, PLR0917, C901
     Returns:
         Confirmation text.
     """
-    optional_fields: dict[str, str | bool] = {}
+    optional_fields: dict[str, Any] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
     if payee_id is not None:
@@ -328,7 +333,7 @@ async def _update_transaction(  # noqa: PLR0913, PLR0917, C901
     if flag_color is not None:
         optional_fields["flag_color"] = flag_color
 
-    body: dict = {**optional_fields}
+    body: dict[str, Any] = {**optional_fields}
     if amount is not None:
         body["amount"] = dollars_to_milliunits(amount)
     if date is not None:
@@ -364,7 +369,7 @@ async def _delete_transaction(
 async def _batch_create_transactions(
     app: AppContext,
     budget_id: str,
-    transactions: list[dict] | None,
+    transactions: list[dict[str, Any]] | None,
 ) -> str:
     """Create multiple transactions in a single API call.
 
@@ -378,7 +383,7 @@ async def _batch_create_transactions(
         msg = "Transactions list must not be empty."
         raise ToolError(msg)
 
-    processed = []
+    processed: list[dict[str, Any]] = []
     for txn in transactions:
         txn_copy = dict(txn)
         if "amount" in txn_copy:
@@ -395,7 +400,7 @@ async def _batch_create_transactions(
 async def _batch_update_transactions(
     app: AppContext,
     budget_id: str,
-    transactions: list[dict] | None,
+    transactions: list[dict[str, Any]] | None,
 ) -> str:
     """Update multiple transactions in a single API call.
 
@@ -409,7 +414,7 @@ async def _batch_update_transactions(
         msg = "Transactions list must not be empty."
         raise ToolError(msg)
 
-    processed = []
+    processed: list[dict[str, Any]] = []
     for txn in transactions:
         txn_copy = dict(txn)
         if "amount" in txn_copy:
@@ -472,7 +477,7 @@ async def manage_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0911
     type: str | None = None,  # noqa: A002
     month: str | None = None,
     limit: int | None = None,
-    transactions: list[dict] | None = None,
+    transactions: list[dict[str, Any]] | None = None,
 ) -> str:
     """Manage YNAB transactions: list, get, create, update, delete, batch, import.
 
@@ -529,7 +534,7 @@ async def manage_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0911
     Raises:
         ToolError: If required parameters for the action are missing.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     budget_id, _info = await resolve_budget(
         app.client, budget_id_or_name, cache=app.cache
     )

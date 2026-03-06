@@ -1,6 +1,6 @@
 """Payee tools: list, detail, rename, and payee location tools."""
 
-from typing import Literal
+from typing import Literal, cast
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -166,7 +166,7 @@ async def manage_payees(  # noqa: PLR0913, PLR0917
     Raises:
         ToolError: If required parameters for the action are missing.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
 
     if action == "list":

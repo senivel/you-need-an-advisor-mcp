@@ -1,6 +1,6 @@
 """Scheduled transaction tools: consolidated manage_scheduled_transactions."""
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -10,7 +10,7 @@ from ynab_mcp.budget_resolver import resolve_budget
 from ynab_mcp.converters import dollars_to_milliunits, format_dollars
 
 
-def _format_scheduled_transaction_line(txn: dict) -> list[str]:
+def _format_scheduled_transaction_line(txn: dict[str, Any]) -> list[str]:
     """Format a single scheduled transaction for list view.
 
     Each transaction produces two lines: a summary line with next date
@@ -34,7 +34,7 @@ def _format_scheduled_transaction_line(txn: dict) -> list[str]:
     ]
 
 
-def _format_scheduled_transaction_detail(txn: dict) -> list[str]:
+def _format_scheduled_transaction_detail(txn: dict[str, Any]) -> list[str]:
     """Format a single scheduled transaction for detail view.
 
     Includes all fields with optional ones only shown when present.
@@ -74,7 +74,7 @@ def _format_scheduled_transaction_detail(txn: dict) -> list[str]:
     return lines
 
 
-def _format_scheduled_transaction_confirmation(verb: str, txn: dict) -> str:
+def _format_scheduled_transaction_confirmation(verb: str, txn: dict[str, Any]) -> str:
     """Format a scheduled transaction create/update/delete confirmation.
 
     Args:
@@ -182,7 +182,7 @@ async def _create_scheduled(  # noqa: PLR0913, PLR0917, C901
     Raises:
         ToolError: If required fields (account_id, date) are missing.
     """
-    missing = []
+    missing: list[str] = []
     if account_id is None:
         missing.append("account_id")
     if date is None:
@@ -191,7 +191,11 @@ async def _create_scheduled(  # noqa: PLR0913, PLR0917, C901
         msg = f"Create requires: {', '.join(missing)}"
         raise ToolError(msg)
 
-    optional_fields: dict[str, str | int] = {}
+    # Narrowing: pyright can't track list-based None checks, assert after guard
+    assert account_id is not None
+    assert date is not None
+
+    optional_fields: dict[str, Any] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
     if payee_id is not None:
@@ -205,7 +209,7 @@ async def _create_scheduled(  # noqa: PLR0913, PLR0917, C901
     if frequency is not None:
         optional_fields["frequency"] = frequency
 
-    body: dict = {
+    body: dict[str, Any] = {
         "account_id": account_id,
         "date": date,
         **optional_fields,
@@ -254,7 +258,7 @@ async def _update_scheduled(  # noqa: PLR0913, PLR0917
     Returns:
         Confirmation text with key scheduled transaction fields.
     """
-    optional_fields: dict[str, str | int] = {}
+    optional_fields: dict[str, Any] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
     if payee_id is not None:
@@ -268,7 +272,7 @@ async def _update_scheduled(  # noqa: PLR0913, PLR0917
     if frequency is not None:
         optional_fields["frequency"] = frequency
 
-    body: dict = {**optional_fields}
+    body: dict[str, Any] = {**optional_fields}
     if amount is not None:
         body["amount"] = dollars_to_milliunits(amount)
     if date is not None:
@@ -366,7 +370,7 @@ async def manage_scheduled_transactions(  # noqa: PLR0913, PLR0917
     Raises:
         ToolError: If required parameters for the action are missing.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     budget_id, _info = await resolve_budget(
         app.client, budget_id_or_name, cache=app.cache
     )

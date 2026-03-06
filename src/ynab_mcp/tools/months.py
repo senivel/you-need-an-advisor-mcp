@@ -1,6 +1,6 @@
 """Month tools: consolidated manage_months with action-parameter dispatch."""
 
-from typing import Literal
+from typing import Any, Literal, cast
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -74,7 +74,7 @@ async def _get_month(app: AppContext, budget_id: str, month: str) -> str:
 
     # Group categories by category_group_name
     categories = m.get("categories", [])
-    groups: dict[str, list[dict]] = {}
+    groups: dict[str, list[dict[str, Any]]] = {}
     for cat in categories:
         group_name = cat.get("category_group_name") or cat.get(
             "category_group_id", "Uncategorized"
@@ -221,7 +221,7 @@ async def manage_months(
     Raises:
         ToolError: If "get" is called without ``month``.
     """
-    app: AppContext = ctx.lifespan_context
+    app = cast("AppContext", ctx.lifespan_context)
     budget_id, _info = await resolve_budget(
         app.client, budget_id_or_name, cache=app.cache
     )
