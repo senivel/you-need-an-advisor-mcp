@@ -2,22 +2,7 @@
 
 import pytest
 
-from ynab_mcp.server import get_budget, get_user, list_budgets
-
-
-@pytest.fixture
-def mock_ctx(mocker):
-    """Create a mock MCP Context with a mocked YNABClient.
-
-    Returns:
-        A mock Context with lifespan_context.client set.
-    """
-    client = mocker.AsyncMock()
-    app = mocker.MagicMock()
-    app.client = client
-    ctx = mocker.MagicMock()
-    ctx.lifespan_context = app
-    return ctx
+from ynab_mcp.tools.budgets import get_budget, get_user, list_budgets
 
 
 def _make_budget_get_side_effect():
@@ -94,7 +79,7 @@ class TestGetBudget:
     @pytest.mark.anyio
     async def test_returns_budget_detail_with_settings(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.budgets.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_client = mock_ctx.lifespan_context.client
@@ -111,7 +96,7 @@ class TestGetBudget:
     @pytest.mark.anyio
     async def test_prepends_info_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.budgets.resolve_budget",
             return_value=(
                 "budget-123",
                 "Using budget 'My Budget' (only budget found)",
@@ -127,7 +112,7 @@ class TestGetBudget:
     @pytest.mark.anyio
     async def test_passes_budget_id_or_name_to_resolver(self, mock_ctx, mocker):
         mock_resolve = mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.budgets.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_client = mock_ctx.lifespan_context.client

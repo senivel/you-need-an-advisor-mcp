@@ -2,25 +2,10 @@
 
 import pytest
 
-from ynab_mcp.server import create_account, get_account, get_accounts
+from ynab_mcp.tools.accounts import create_account, get_account, get_accounts
 
 
-@pytest.fixture
-def mock_ctx(mocker):
-    """Create a mock MCP Context with a mocked YNABClient.
-
-    Returns:
-        A mock Context with lifespan_context.client set.
-    """
-    client = mocker.AsyncMock()
-    app = mocker.MagicMock()
-    app.client = client
-    ctx = mocker.MagicMock()
-    ctx.lifespan_context = app
-    return ctx
-
-
-def _make_account(
+def _make_account(  # noqa: PLR0913
     *,
     name="Checking",
     account_type="checking",
@@ -34,7 +19,11 @@ def _make_account(
     account_id="acct-111",
     transfer_payee_id=None,
 ):
-    """Build a sample account dict matching YNAB API shape (post-conversion)."""
+    """Build a sample account dict matching YNAB API shape (post-conversion).
+
+    Returns:
+        Dict with account fields.
+    """
     return {
         "id": account_id,
         "name": name,
@@ -57,7 +46,7 @@ class TestGetAccounts:
     async def test_list_accounts(self, mock_ctx, mocker):
         """Count header, structured format, dollar formatting."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -87,7 +76,7 @@ class TestGetAccounts:
     async def test_list_accounts_excludes_closed(self, mock_ctx, mocker):
         """Closed accounts filtered by default."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -109,7 +98,7 @@ class TestGetAccounts:
     async def test_list_accounts_include_closed(self, mock_ctx, mocker):
         """include_closed=True shows closed but not deleted accounts."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -131,7 +120,7 @@ class TestGetAccounts:
     async def test_list_accounts_empty(self, mock_ctx, mocker):
         """No accounts returns appropriate message."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -146,7 +135,7 @@ class TestGetAccounts:
     async def test_list_accounts_empty_after_filter(self, mock_ctx, mocker):
         """All accounts closed returns filtered message."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -163,7 +152,7 @@ class TestGetAccounts:
     async def test_list_accounts_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", "Using budget 'My Budget' (only budget found)"),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -184,7 +173,7 @@ class TestGetAccount:
     async def test_get_account(self, mock_ctx, mocker):
         """Detail view has all fields, dollar amounts formatted."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -214,7 +203,7 @@ class TestGetAccount:
     async def test_get_account_no_note(self, mock_ctx, mocker):
         """Note line omitted when note is None."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -229,7 +218,7 @@ class TestGetAccount:
     async def test_get_account_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", "Using budget 'My Budget' (only budget found)"),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -248,7 +237,7 @@ class TestCreateAccount:
     async def test_create_account(self, mock_ctx, mocker):
         """Verifies POST called with milliunits, confirmation message format."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -289,7 +278,7 @@ class TestCreateAccount:
     async def test_create_account_dollar_conversion(self, mock_ctx, mocker):
         """$100.50 -> 100500 milliunits in request body."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -316,7 +305,7 @@ class TestCreateAccount:
     async def test_create_account_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.accounts.resolve_budget",
             return_value=(
                 "budget-123",
                 "Using budget 'My Budget' (only budget found)",
