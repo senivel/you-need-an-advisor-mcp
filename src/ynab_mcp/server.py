@@ -13,6 +13,7 @@ import ynab_mcp.tools.months  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.tools.payees  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.tools.scheduled  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.tools.transactions  # pyright: ignore[reportUnusedImport]
+import ynab_mcp.workflows  # pyright: ignore[reportUnusedImport]
 from ynab_mcp.app import AppContext, lifespan, mcp
 
 
