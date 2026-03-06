@@ -360,7 +360,9 @@ async def manage_categories(  # noqa: PLR0913, PLR0917, C901, PLR0911
         ToolError: If required parameters for the action are missing.
     """
     app = cast("AppContext", ctx.lifespan_context)
-    budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     if action == "list":
         return await _list_categories(

@@ -167,7 +167,9 @@ async def manage_payees(  # noqa: PLR0913, PLR0917
         ToolError: If required parameters for the action are missing.
     """
     app = cast("AppContext", ctx.lifespan_context)
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     if action == "list":
         return await _list_payees(app, budget_id, include_transfers=include_transfers)
