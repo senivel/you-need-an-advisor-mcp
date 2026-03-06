@@ -1,4 +1,11 @@
 repos:
+  - repo: local
+    hooks:
+      - id: no-planning-files
+        name: block .planning/ from commits
+        entry: "sh -c 'echo Blocked - .planning/ files should not be committed && exit 1'"
+        language: system
+        files: ^\.planning/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
