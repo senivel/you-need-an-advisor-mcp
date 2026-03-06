@@ -1,6 +1,7 @@
 """MCP server wiring: imports tool/prompt/resource modules to register handlers."""
 
 # Side-effect imports: each module registers MCP handlers at import time.
+import ynab_mcp.analysis  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.knowledge  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.prompts  # pyright: ignore[reportUnusedImport]
 import ynab_mcp.resources  # pyright: ignore[reportUnusedImport]
