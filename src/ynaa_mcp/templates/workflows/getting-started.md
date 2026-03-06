@@ -16,7 +16,7 @@ Welcome to YNAB! Let's set up your first budget together. This guide will walk y
 
 8. Let's customize your categories to match your real life. Use the `manage_categories` tool with action="create_group" to create category groups that make sense for you. Common groups: "Fixed Bills", "Flexible Spending", "Savings Goals", and "Quality of Life".
 
-9. Within each group, use `manage_categories` with action="create_category" to add specific categories. Start with your most important expenses: rent/mortgage, utilities, groceries, transportation. You can always add more later.
+9. Within each group, use `manage_categories` with action="create" to add specific categories. Start with your most important expenses: rent/mortgage, utilities, groceries, transportation. You can always add more later.
 
 10. Now for the heart of YNAB -- **giving every dollar a job** (Rule 1). Look at your To Be Budgeted (TBB) amount. This is the money sitting in your accounts right now, waiting to be assigned.
 

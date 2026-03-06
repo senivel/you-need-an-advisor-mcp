@@ -8,7 +8,7 @@ Breaking the paycheck-to-paycheck cycle is one of the most transformative things
 
 4. The concept is simple: instead of getting paid and immediately budgeting that money for this month's expenses, you want to get paid and hold that money until next month. This means **this month's expenses are already covered** before the month even starts.
 
-5. Use `manage_categories` with action="create_category" to create a "Buffer" or "Next Month's Budget" category. This is the holding tank for income that you won't touch until the following month.
+5. Use `manage_categories` with action="create" to create a "Buffer" or "Next Month's Budget" category. This is the holding tank for income that you won't touch until the following month.
 
 6. Let's be real: you probably can't buffer a full month overnight. That's fine. We're going to get there gradually. Here's the transition plan:
 

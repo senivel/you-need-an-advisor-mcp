@@ -21,7 +21,7 @@ Guide through setting up a new YNAB budget.
      - True Expenses (insurance premiums, car maintenance, medical costs, annual subscriptions)
      - Quality of Life (dining out, entertainment, hobbies, personal care)
      - Savings Goals (emergency fund, vacation, large purchases)
-   - Use action="create_category" within each group for specific categories.
+   - Use action="create" within each group for specific categories.
 
 8. Explain Rule 1: **Give Every Dollar a Job.** Every dollar currently in the accounts needs to be assigned to a category. This is not about predicting the future -- it is about deciding what today's dollars should do.
 

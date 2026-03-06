@@ -20,9 +20,9 @@ Budgeting as a couple is one of the most impactful financial moves you can make 
    - "Partner 2 Personal" (individual spending)
    - "Shared Goals" (vacation, emergency fund, home down payment)
 
-6. Within each group, use `manage_categories` with action="create_category" to add specific categories. Start with the ones you both agree on -- you can always refine later.
+6. Within each group, use `manage_categories` with action="create" to add specific categories. Start with the ones you both agree on -- you can always refine later.
 
-7. Here's the key to reducing friction: **fun money categories**. Use `manage_categories` with action="create_category" to create a personal allowance category for each partner. This is money each person can spend however they want, no questions asked. It's not about control -- it's about freedom within structure.
+7. Here's the key to reducing friction: **fun money categories**. Use `manage_categories` with action="create" to create a personal allowance category for each partner. This is money each person can spend however they want, no questions asked. It's not about control -- it's about freedom within structure.
 
 8. Decide on the fun money amount together. It should be equal (or proportional if your incomes differ significantly). Budget it using `manage_categories` with action="update". This one category prevents more arguments than any other.
 

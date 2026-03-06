@@ -8,7 +8,7 @@ Budgeting with irregular income can feel uncertain, but YNAB is actually built f
 
 4. Use `manage_categories` with action="create_group" to create a group called "Income Buffer" (or "Income Replacement" -- whatever name resonates with you).
 
-5. Use `manage_categories` with action="create_category" to create a category within that group called "Next Month's Budget." This is where you'll hold money until it's time to budget it.
+5. Use `manage_categories` with action="create" to create a category within that group called "Next Month's Budget." This is where you'll hold money until it's time to budget it.
 
 6. Here's how the monthly workflow works:
    - When income arrives (a client payment, a commission check, freelance invoice), categorize it as income in YNAB
@@ -21,7 +21,7 @@ Budgeting with irregular income can feel uncertain, but YNAB is actually built f
 
 9. Now let's handle **true expenses** -- those irregular annual or semi-annual costs that catch freelancers off guard. Things like annual software subscriptions, quarterly tax payments, insurance premiums, or professional dues.
 
-10. Use `manage_categories` with action="create_category" to create categories for each true expense. Calculate the monthly amount (annual cost divided by 12) and budget that amount each month so the money is ready when the bill comes.
+10. Use `manage_categories` with action="create" to create categories for each true expense. Calculate the monthly amount (annual cost divided by 12) and budget that amount each month so the money is ready when the bill comes.
 
 11. For **quarterly estimated tax payments** (common for freelancers), create a "Taxes" category and set aside a percentage of each payment you receive. A common starting point is 25-30% of income, but check with your tax advisor.
 

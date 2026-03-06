@@ -22,7 +22,7 @@ Let's build a plan to get out of debt. This workflow will help you understand yo
 
 8. Use `manage_categories` with action="create_group" to create a "Debt Payments" category group. This keeps all your debt-related budgeting organized and visible.
 
-9. Within that group, use `manage_categories` with action="create_category" to create a category for each debt. Name them clearly (e.g., "Visa Payment", "Car Loan Payment").
+9. Within that group, use `manage_categories` with action="create" to create a category for each debt. Name them clearly (e.g., "Visa Payment", "Car Loan Payment").
 
 10. Set up scheduled transactions for your minimum payments. Use `manage_scheduled_transactions` with action="create" for each debt's minimum monthly payment. This ensures you never miss a payment.
 

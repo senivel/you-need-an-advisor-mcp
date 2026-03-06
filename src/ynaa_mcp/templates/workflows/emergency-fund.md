@@ -8,7 +8,7 @@ Building an emergency fund is one of the most important things you can do for yo
 
 4. Read the categories resource at `ynab://budgets/{budget_id}/categories` to see your current category structure. We'll add the emergency fund here.
 
-5. Use `manage_categories` with action="create_category" to create an "Emergency Fund" category. Place it in a savings-oriented group, or create a new group called "Financial Security" using `manage_categories` with action="create_group" first.
+5. Use `manage_categories` with action="create" to create an "Emergency Fund" category. Place it in a savings-oriented group, or create a new group called "Financial Security" using `manage_categories` with action="create_group" first.
 
 6. Now set a goal on your emergency fund category. Use `manage_categories` with action="update" to set a Target Balance goal with the amount you calculated in step 3. YNAB will show you how much you need to save each month to reach your target.
 
