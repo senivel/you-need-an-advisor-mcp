@@ -5,8 +5,10 @@ template .md files corresponds to a registered MCP tool, resource, or template.
 """
 
 import asyncio
+import importlib
 import importlib.resources
 import re
+import typing
 
 import ynaa_mcp.server  # noqa: F401  # Side-effect: registers all MCP handlers
 from ynaa_mcp.app import mcp
@@ -75,6 +77,77 @@ def _load_all_template_files() -> dict[str, str]:
 _TOOL_REF_RE = re.compile(r"`(manage_\w+|clear_cache)`")
 # Matches ynab:// URIs (with or without {budget_id} placeholder)
 _RESOURCE_REF_RE = re.compile(r"`(ynab://[^`]+)`")
+# Matches action="value" patterns (with or without tool name on same line)
+_ACTION_VALUE_RE = re.compile(r'action="(\w+)"')
+
+
+def _get_valid_actions_for_tool(tool_name: str) -> set[str]:
+    """Return the set of valid Literal action values for a manage_* tool.
+
+    Dynamically imports the tool module, introspects the function's ``action``
+    parameter type hint, and extracts the ``Literal`` members.
+
+    Args:
+        tool_name: Registered MCP tool name (e.g. ``manage_categories``).
+
+    Returns:
+        Set of valid action strings, or empty set if tool has no action param.
+    """
+    # manage_budgets -> budgets, manage_scheduled_transactions -> scheduled
+    parts = tool_name.split("_", 1)
+    if len(parts) < 2:
+        return set()
+    # Map tool name to module: manage_scheduled_transactions -> scheduled
+    module_suffix = parts[1]
+    # The module name matches the last segment for multi-word tools
+    # e.g. manage_scheduled_transactions -> ynaa_mcp.tools.scheduled
+    module_name = f"ynaa_mcp.tools.{module_suffix}"
+    try:
+        mod = importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        # Try stripping to first word: scheduled_transactions -> scheduled
+        module_name = f"ynaa_mcp.tools.{module_suffix.split('_')[0]}"
+        mod = importlib.import_module(module_name)
+    func = getattr(mod, tool_name, None)
+    if func is None:
+        return set()
+    hints = typing.get_type_hints(func)
+    action_hint = hints.get("action")
+    if action_hint is None:
+        return set()
+    args = typing.get_args(action_hint)
+    return set(args)
+
+
+def _extract_action_references(
+    content: str,
+) -> list[tuple[str, str]]:
+    """Extract (tool_name, action_value) pairs from template content.
+
+    Walks the content line by line, tracking the most recently seen
+    ``manage_*`` tool name. When an ``action="..."`` pattern is found,
+    it is paired with that tool name. This handles both inline references
+    (tool and action on same line) and multi-line references (tool on a
+    preceding line).
+
+    Returns:
+        List of (tool_name, action_value) tuples.
+    """
+    refs: list[tuple[str, str]] = []
+    current_tool: str | None = None
+    for line in content.splitlines():
+        # Update current tool if a manage_* reference appears on this line
+        tool_matches = _TOOL_REF_RE.findall(line)
+        if tool_matches:
+            # Use the last tool reference on the line (most proximate)
+            last_manage = [t for t in tool_matches if t.startswith("manage_")]
+            if last_manage:
+                current_tool = last_manage[-1]
+        # Check for action references on this line
+        action_matches = _ACTION_VALUE_RE.findall(line)
+        if action_matches and current_tool:
+            refs.extend((current_tool, action) for action in action_matches)
+    return refs
 
 
 # ---------------------------------------------------------------------------
@@ -167,6 +240,45 @@ class TestTemplateFormatSafety:
         assert not errors, "Template files have format issues:\n" + "\n".join(
             f"  - {e}" for e in errors
         )
+
+
+class TestActionReferences:
+    """Every action="..." value in templates is a valid Literal for its tool."""
+
+    def test_all_action_references_valid(self):
+        all_templates = _load_all_template_files()
+
+        # Build cache of valid actions per tool
+        valid_actions_cache: dict[str, set[str]] = {}
+
+        invalid: list[str] = []
+        for filename, content in all_templates.items():
+            refs = _extract_action_references(content)
+            for tool_name, action_value in refs:
+                if tool_name not in valid_actions_cache:
+                    valid_actions_cache[tool_name] = _get_valid_actions_for_tool(
+                        tool_name
+                    )
+                valid = valid_actions_cache[tool_name]
+                if valid and action_value not in valid:
+                    invalid.append(
+                        f'{filename}: `{tool_name}` action="{action_value}"'
+                        f" (valid: {sorted(valid)})"
+                    )
+
+        assert not invalid, (
+            "Template files reference invalid action values:\n"
+            + "\n".join(f"  - {i}" for i in invalid)
+        )
+
+    def test_at_least_one_action_reference_found(self):
+        """Sanity check: templates should reference at least some actions."""
+        all_templates = _load_all_template_files()
+        total_refs = sum(
+            len(_extract_action_references(content))
+            for content in all_templates.values()
+        )
+        assert total_refs > 0, "No action references found in any template"
 
 
 class TestPromptCount:
