@@ -1,6 +1,7 @@
 """Tests for knowledge resources."""
 
 import pytest
+
 from ynab_mcp.knowledge import (
     CREDIT_CARDS_CONTENT,
     GOALS_CONTENT,
