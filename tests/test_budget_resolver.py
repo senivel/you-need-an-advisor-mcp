@@ -4,6 +4,7 @@ import pytest
 from fastmcp.exceptions import ToolError
 
 from ynab_mcp.budget_resolver import resolve_budget
+from ynab_mcp.cache import CacheStore
 
 
 def _make_budget(budget_id, name):
@@ -110,3 +111,54 @@ class TestFuzzyNameMatch:
 
         with pytest.raises(ToolError, match="No budget found matching"):
             await resolve_budget(client, "zzzzz totally wrong")
+
+
+class TestBudgetCacheIntegration:
+    """Tests for resolve_budget with TTL cache."""
+
+    @pytest.mark.anyio
+    async def test_cached_budget_list_avoids_api_call(self, mocker):
+        """Second resolve_budget call uses cache, no API hit."""
+        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time.monotonic.return_value = 1000.0
+
+        client = _mock_client(mocker, [BUDGET_A])
+        cache = CacheStore()
+
+        # First call -- hits API
+        budget_id_1, _ = await resolve_budget(client, "aaaa-1111", cache=cache)
+        assert budget_id_1 == "aaaa-1111"
+        assert client.get.call_count == 1
+
+        # Second call -- should use cache
+        mock_time.monotonic.return_value = 1100.0
+        budget_id_2, _ = await resolve_budget(client, "aaaa-1111", cache=cache)
+        assert budget_id_2 == "aaaa-1111"
+        assert client.get.call_count == 1  # Still 1 -- no extra API call
+
+    @pytest.mark.anyio
+    async def test_expired_cache_fetches_from_api(self, mocker):
+        """resolve_budget fetches from API when TTL expired."""
+        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time.monotonic.return_value = 1000.0
+
+        client = _mock_client(mocker, [BUDGET_A])
+        cache = CacheStore()
+
+        # First call
+        await resolve_budget(client, "aaaa-1111", cache=cache)
+        assert client.get.call_count == 1
+
+        # Expire the TTL (> 300 seconds later)
+        mock_time.monotonic.return_value = 1301.0
+        await resolve_budget(client, "aaaa-1111", cache=cache)
+        assert client.get.call_count == 2  # Had to re-fetch
+
+    @pytest.mark.anyio
+    async def test_resolve_budget_works_without_cache(self, mocker):
+        """resolve_budget works without cache parameter (backward compat)."""
+        client = _mock_client(mocker, [BUDGET_A])
+
+        budget_id, _ = await resolve_budget(client, "aaaa-1111")
+        assert budget_id == "aaaa-1111"
+        assert client.get.call_count == 1

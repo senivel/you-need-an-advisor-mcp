@@ -120,7 +120,9 @@ class TestManageBudgetsGet:
 
         await manage_budgets(mock_ctx, action="get", budget_id_or_name="My Budget")
 
-        mock_resolve.assert_called_once_with(mock_client, "My Budget")
+        mock_resolve.assert_called_once_with(
+            mock_client, "My Budget", cache=mock_ctx.lifespan_context.cache
+        )
 
 
 class TestManageBudgetsGetUser:

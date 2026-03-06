@@ -28,7 +28,9 @@ async def list_payees(
         or "No payees found." if none match.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(f"/budgets/{budget_id}/payees")
     all_payees = data["payees"]
@@ -71,7 +73,9 @@ async def get_payee(
         Structured text with payee details.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(f"/budgets/{budget_id}/payees/{payee_id}")
     payee = data["payee"]
@@ -108,7 +112,9 @@ async def update_payee_name(
         Confirmation text with the updated payee name and ID.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.patch(
         f"/budgets/{budget_id}/payees/{payee_id}",
@@ -141,7 +147,9 @@ async def list_payee_locations(
         or "No payee locations found." if none exist.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     if payee_id:
         path = f"/budgets/{budget_id}/payees/{payee_id}/payee_locations"
@@ -188,7 +196,9 @@ async def get_payee_location(
         Structured text with payee location details.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(
         f"/budgets/{budget_id}/payee_locations/{payee_location_id}",

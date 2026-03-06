@@ -27,7 +27,9 @@ async def list_months(
         or "No months found." if none exist.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(f"/budgets/{budget_id}/months")
     all_months = data["months"]
@@ -77,7 +79,9 @@ async def get_month(
         Structured text with month summary and grouped category detail.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     normalized = normalize_month(month)
     data = await app.client.get(f"/budgets/{budget_id}/months/{normalized}")
@@ -140,7 +144,9 @@ async def list_money_movements(
         or "No money movements found." if none exist.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     if month is not None:
         normalized = normalize_month(month)
@@ -193,7 +199,9 @@ async def list_money_movement_groups(
         or "No money movement groups found." if none exist.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     if month is not None:
         normalized = normalize_month(month)

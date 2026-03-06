@@ -176,7 +176,9 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
         raise ToolError(msg)
 
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     # Determine API path based on filter
     if account_id:
@@ -246,7 +248,9 @@ async def get_transaction(
         Structured text with full transaction detail view.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(f"/budgets/{budget_id}/transactions/{transaction_id}")
     txn = data["transaction"]
@@ -303,7 +307,9 @@ async def manage_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
         ToolError: If creating without required fields (account_id, date, amount).
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     # Optional fields shared between create and update
     optional_fields: dict[str, str | bool] = {}
@@ -386,7 +392,9 @@ async def delete_transaction(
         Confirmation text with deleted transaction details.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.delete(
         f"/budgets/{budget_id}/transactions/{transaction_id}",
@@ -423,7 +431,9 @@ async def batch_create_transactions(
         raise ToolError(msg)
 
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     processed = []
     for txn in transactions:
@@ -466,7 +476,9 @@ async def batch_update_transactions(
         raise ToolError(msg)
 
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     processed = []
     for txn in transactions:
@@ -501,7 +513,9 @@ async def import_transactions(
         Summary of imported transactions, or message if none imported.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.post(f"/budgets/{budget_id}/transactions/import")
     txn_ids = data.get("transaction_ids", [])

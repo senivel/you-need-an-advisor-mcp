@@ -289,6 +289,56 @@ class TestCrossInvalidationMap:
         assert "months" in CROSS_INVALIDATION_MAP["categories"]
 
 
+class TestTTLCache:
+    """Tests for TTL-based caching methods."""
+
+    def test_get_ttl_returns_none_for_missing_key(self):
+        """get_ttl returns None for a key that was never set."""
+        store = CacheStore()
+        assert store.get_ttl("budgets") is None
+
+    def test_set_ttl_stores_data_and_get_ttl_retrieves_it(self, mocker):
+        """set_ttl stores data, get_ttl retrieves it within TTL window."""
+        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time.monotonic.return_value = 1000.0
+
+        store = CacheStore()
+        store.set_ttl("budgets", {"budgets": [{"id": "b1"}]}, ttl_seconds=300.0)
+
+        # Still within TTL window
+        mock_time.monotonic.return_value = 1100.0
+        result = store.get_ttl("budgets")
+        assert result == {"budgets": [{"id": "b1"}]}
+
+    def test_get_ttl_returns_none_after_ttl_expires(self, mocker):
+        """get_ttl returns None and cleans up entry after TTL expires."""
+        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time.monotonic.return_value = 1000.0
+
+        store = CacheStore()
+        store.set_ttl("budgets", {"budgets": [{"id": "b1"}]}, ttl_seconds=300.0)
+
+        # TTL expired
+        mock_time.monotonic.return_value = 1301.0
+        result = store.get_ttl("budgets")
+        assert result is None
+
+    def test_clear_removes_ttl_entries(self, mocker):
+        """clear() removes TTL entries alongside delta entries."""
+        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time.monotonic.return_value = 1000.0
+
+        store = CacheStore()
+        store.update("b1:accounts", 1, {"accounts": []})
+        store.set_ttl("budgets", {"budgets": [{"id": "b1"}]}, ttl_seconds=300.0)
+
+        store.clear()
+
+        assert store.get_cached_data("b1:accounts") is None
+        mock_time.monotonic.return_value = 1001.0
+        assert store.get_ttl("budgets") is None
+
+
 class TestStripServerKnowledge:
     """Tests for strip_server_knowledge function."""
 

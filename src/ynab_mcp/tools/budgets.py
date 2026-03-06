@@ -114,7 +114,9 @@ async def manage_budgets(
         return await _list_budgets(app)
 
     if action == "get":
-        budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+        budget_id, info = await resolve_budget(
+            app.client, budget_id_or_name, cache=app.cache
+        )
         return await _get_budget(app, budget_id, info)
 
     return await _get_user(app)

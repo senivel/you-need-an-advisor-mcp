@@ -114,7 +114,9 @@ async def list_scheduled_transactions(
         or "No scheduled transactions found." if none exist.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(f"/budgets/{budget_id}/scheduled_transactions")
     all_txns = data["scheduled_transactions"]
@@ -155,7 +157,9 @@ async def get_scheduled_transaction(
         Structured text with full scheduled transaction detail view.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.get(
         f"/budgets/{budget_id}/scheduled_transactions/{scheduled_transaction_id}",
@@ -215,7 +219,9 @@ async def manage_scheduled_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
         ToolError: If creating without required fields (account_id, date).
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     # Optional fields shared between create and update
     optional_fields: dict[str, str | int] = {}
@@ -295,7 +301,9 @@ async def delete_scheduled_transaction(
         Confirmation text with deleted scheduled transaction details.
     """
     app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(app.client, budget_id_or_name)
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
 
     data = await app.client.delete(
         f"/budgets/{budget_id}/scheduled_transactions/{scheduled_transaction_id}",

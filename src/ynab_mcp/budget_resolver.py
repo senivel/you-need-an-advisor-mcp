@@ -5,21 +5,33 @@ Provides ``resolve_budget()`` which resolves a budget identifier
 on a specific budget.
 """
 
+from __future__ import annotations
+
 from difflib import SequenceMatcher
+from typing import TYPE_CHECKING
 
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.client import YNABClient
 from ynab_mcp.models import BudgetsResponse
+
+
+if TYPE_CHECKING:
+    from ynab_mcp.cache import CacheStore
+    from ynab_mcp.client import YNABClient
 
 
 _FUZZY_MATCH_THRESHOLD = 0.6
 """Minimum SequenceMatcher ratio for a fuzzy name match."""
 
+_BUDGET_LIST_TTL = 300.0
+"""TTL in seconds for cached budget list (5 minutes)."""
+
 
 async def resolve_budget(
     client: YNABClient,
     budget_id_or_name: str | None = None,
+    *,
+    cache: CacheStore | None = None,
 ) -> tuple[str, str | None]:
     """Resolve a budget identifier to a budget ID.
 
@@ -35,6 +47,7 @@ async def resolve_budget(
     Args:
         client: The YNAB API client instance.
         budget_id_or_name: Optional budget UUID or name to resolve.
+        cache: Optional CacheStore for TTL-based budget list caching.
 
     Returns:
         A tuple of ``(budget_id, info_message)`` where ``info_message``
@@ -43,7 +56,13 @@ async def resolve_budget(
     Raises:
         ToolError: If resolution fails (no budgets, ambiguous, no match).
     """
-    data = await client.get("/budgets")
+    cached_data = cache.get_ttl("budgets") if cache else None
+    if cached_data is not None:
+        data = cached_data
+    else:
+        data = await client.get("/budgets")
+        if cache is not None:
+            cache.set_ttl("budgets", data, ttl_seconds=_BUDGET_LIST_TTL)
     budgets_response = BudgetsResponse.model_validate(data)
     budgets = budgets_response.budgets
 

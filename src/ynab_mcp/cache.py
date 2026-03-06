@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -55,6 +56,19 @@ class CacheEntry:
     data: dict[str, Any]
 
 
+@dataclass
+class TTLCacheEntry:
+    """A cached value with a time-to-live expiration.
+
+    Attributes:
+        data: The cached data dict.
+        expires_at: Monotonic clock timestamp when this entry expires.
+    """
+
+    data: dict[str, Any]
+    expires_at: float
+
+
 class CacheStore:
     """In-memory cache for YNAB delta-capable endpoints.
 
@@ -69,6 +83,7 @@ class CacheStore:
     def __init__(self) -> None:
         """Initialize an empty cache store."""
         self._entries: dict[str, CacheEntry] = {}
+        self._ttl_entries: dict[str, TTLCacheEntry] = {}
 
     def get_knowledge(self, cache_key: str) -> int | None:
         """Return stored server_knowledge for a cache key, or None.
@@ -197,9 +212,47 @@ class CacheStore:
         for cross_resource in CROSS_INVALIDATION_MAP.get(resource, []):
             self.invalidate(f"{budget_id}:{cross_resource}")
 
+    def get_ttl(self, key: str) -> dict[str, Any] | None:
+        """Return cached data for a TTL key, or None if missing/expired.
+
+        Expired entries are deleted on access.
+
+        Args:
+            key: The TTL cache key.
+
+        Returns:
+            The cached data dict, or None if not cached or expired.
+        """
+        entry = self._ttl_entries.get(key)
+        if entry is None:
+            return None
+        if time.monotonic() > entry.expires_at:
+            del self._ttl_entries[key]
+            return None
+        return entry.data
+
+    def set_ttl(
+        self,
+        key: str,
+        data: dict[str, Any],
+        ttl_seconds: float,
+    ) -> None:
+        """Store data with a time-to-live expiration.
+
+        Args:
+            key: The TTL cache key.
+            data: The data dict to cache.
+            ttl_seconds: Number of seconds until the entry expires.
+        """
+        self._ttl_entries[key] = TTLCacheEntry(
+            data=data,
+            expires_at=time.monotonic() + ttl_seconds,
+        )
+
     def clear(self) -> None:
-        """Remove all cache entries."""
+        """Remove all cache entries (both delta and TTL)."""
         self._entries.clear()
+        self._ttl_entries.clear()
 
     @staticmethod
     def _merge_entity_list(

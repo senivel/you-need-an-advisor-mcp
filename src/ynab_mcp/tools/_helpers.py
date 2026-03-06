@@ -18,6 +18,18 @@ if TYPE_CHECKING:
     from ynab_mcp.client import YNABClient
 
 
+def get_app(ctx: Context) -> AppContext:
+    """Extract the full AppContext from the MCP context.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+
+    Returns:
+        The AppContext instance with client and cache.
+    """
+    return ctx.lifespan_context
+
+
 def get_client(ctx: Context) -> YNABClient:
     """Extract the YNAB API client from the MCP context.
 
