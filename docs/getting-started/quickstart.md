@@ -57,4 +57,4 @@ The server handles authentication, rate limiting, and data formatting automatica
 ## Next Steps
 
 - [Configuration](configuration.md) -- Environment variables and rate limiting details
-- [Tools Reference](tools/index.md) -- Full list of available tools
+- [Tools](../user-guide/tools/index.md) -- Full list of available tools

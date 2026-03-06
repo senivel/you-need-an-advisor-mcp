@@ -21,18 +21,21 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue
-      accent: blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue
-      accent: blue
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -75,19 +78,37 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
-      - Installation: installation.md
-      - Quickstart: quickstart.md
-      - Configuration: configuration.md
-  - Tools Reference:
-      - tools/index.md
-      - Budget Tools: tools/budget-tools.md
-  - Architecture:
-      - architecture/index.md
-      - YNAB Client: architecture/client.md
-      - Rate Limiter: architecture/rate-limiter.md
-      - Converters: architecture/converters.md
-      - Budget Resolver: architecture/budget-resolver.md
-  - Community:
-      - Contributing: contributing.md
-      - Changelog: changelog.md
-      - License: license.md
+      - What is MCP?: getting-started/what-is-mcp.md
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
+      - Configuration: getting-started/configuration.md
+      - Troubleshooting: getting-started/troubleshooting.md
+  - User Guide:
+      - Tools:
+          - user-guide/tools/index.md
+          - Budget Tools: user-guide/tools/budget-tools.md
+          - Account Tools: user-guide/tools/account-tools.md
+          - Category Tools: user-guide/tools/category-tools.md
+          - Transaction Tools: user-guide/tools/transaction-tools.md
+          - Payee Tools: user-guide/tools/payee-tools.md
+          - Month Tools: user-guide/tools/month-tools.md
+          - Scheduled Transaction Tools: user-guide/tools/scheduled-transaction-tools.md
+          - Cache Tools: user-guide/tools/cache-tools.md
+      - Prompts:
+          - Analysis Prompts: user-guide/prompts/analysis-prompts.md
+          - Workflow Guides: user-guide/prompts/workflow-guides.md
+          - Core Prompts: user-guide/prompts/core-prompts.md
+      - Resources: user-guide/resources.md
+  - API Reference:
+      - Tools API: api-reference/tools-api.md
+      - Prompts API: api-reference/prompts-api.md
+      - Resources API: api-reference/resources-api.md
+      - Internals:
+          - Client: api-reference/internals/client.md
+          - Models: api-reference/internals/models.md
+          - Errors: api-reference/internals/errors.md
+  - Contributing:
+      - contributing/index.md
+      - Architecture: contributing/architecture.md
+      - Changelog: contributing/changelog.md
+      - License: contributing/license.md
