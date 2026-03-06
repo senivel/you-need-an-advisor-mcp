@@ -17,19 +17,13 @@ from ynab_mcp.app import mcp
 # ---------------------------------------------------------------------------
 
 
-def _get_event_loop() -> asyncio.AbstractEventLoop:
-    """Get or create an event loop for async introspection.
+def _run_async(coro):
+    """Run an async coroutine synchronously for test introspection.
 
     Returns:
-        An event loop suitable for running coroutines synchronously.
+        The result of the coroutine.
     """
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_closed():
-            loop = asyncio.new_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-    return loop
+    return asyncio.run(coro)
 
 
 def _get_registered_tool_names() -> set[str]:
@@ -37,8 +31,7 @@ def _get_registered_tool_names() -> set[str]:
 
     Uses mcp.list_tools() async API (FastMCP public method).
     """
-    loop = _get_event_loop()
-    tools = loop.run_until_complete(mcp.list_tools())
+    tools = _run_async(mcp.list_tools())
     return {t.name for t in tools}
 
 
@@ -47,8 +40,7 @@ def _get_registered_resource_uris() -> set[str]:
 
     Uses mcp.list_resources() async API.
     """
-    loop = _get_event_loop()
-    resources = loop.run_until_complete(mcp.list_resources())
+    resources = _run_async(mcp.list_resources())
     return {str(r.uri) for r in resources}
 
 
@@ -57,8 +49,7 @@ def _get_registered_resource_template_uris() -> set[str]:
 
     Uses mcp.list_resource_templates() async API.
     """
-    loop = _get_event_loop()
-    templates = loop.run_until_complete(mcp.list_resource_templates())
+    templates = _run_async(mcp.list_resource_templates())
     return {t.uri_template for t in templates}
 
 
@@ -183,8 +174,7 @@ class TestPromptCount:
 
     def test_prompt_count(self):
         """At least 15 prompts registered (3 base + 6 analysis + 6 workflows)."""
-        loop = _get_event_loop()
-        prompts = loop.run_until_complete(mcp.list_prompts())
+        prompts = _run_async(mcp.list_prompts())
         assert len(prompts) >= 15, (
             f"Expected at least 15 prompts, got {len(prompts)}: "
             f"{[p.name for p in prompts]}"
