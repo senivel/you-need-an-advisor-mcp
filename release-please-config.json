@@ -1,0 +1,15 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "package-name": "you-need-an-advisor-mcp",
+      "bump-minor-pre-major": false,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "src/ynaa_mcp/__init__.py"
+        }
+      ]
+    }
+  }
+}
