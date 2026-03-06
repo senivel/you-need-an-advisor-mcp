@@ -20,12 +20,37 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants li
 
 **2.** Add to your Claude Desktop config (`claude_desktop_config.json`):
 
+**With uvx (recommended):**
+
 ```json
 {
   "mcpServers": {
     "ynab": {
       "command": "uvx",
       "args": ["you-need-an-advisor-mcp"],
+      "env": {
+        "YNAB_PAT": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+**With Docker:**
+
+```json
+{
+  "mcpServers": {
+    "ynab": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "YNAB_PAT",
+        "ghcr.io/senivel/you-need-an-advisor-mcp"
+      ],
       "env": {
         "YNAB_PAT": "your-token-here"
       }
