@@ -11,7 +11,7 @@ subpackage via importlib.resources.
 from importlib import resources as pkg_resources
 
 from ynaa_mcp.app import mcp
-from ynaa_mcp.prompts import _resolve_step
+from ynaa_mcp.prompts import resolve_step
 
 
 _templates = pkg_resources.files("ynaa_mcp.templates.analysis")
@@ -50,10 +50,10 @@ def _prepend_resolve_step(template: str) -> str:
     Returns:
         Template text with resolve step prepended and steps renumbered.
     """
-    resolve = _resolve_step()
+    resolve = resolve_step()
     lines = template.split("\n")
     header = lines[0]
-    steps = []
+    steps: list[str] = []
     for line in lines[1:]:
         if line and line[0].isdigit():
             dot_idx = line.index(".")

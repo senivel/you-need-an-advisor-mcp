@@ -13,8 +13,6 @@ from importlib import resources as pkg_resources
 from ynaa_mcp.app import mcp
 
 
-_RESOURCE_BASE = "ynab://budgets"
-
 _templates = pkg_resources.files("ynaa_mcp.templates.prompts")
 REVIEW_SPENDING_TEMPLATE = _templates.joinpath(
     "review-monthly-spending.md",
@@ -27,20 +25,7 @@ BUDGET_HEALTH_TEMPLATE = _templates.joinpath(
 ).read_text(encoding="utf-8")
 
 
-def _resource_uri(budget_id: str, resource: str) -> str:
-    """Build a ynab:// resource URI.
-
-    Args:
-        budget_id: The YNAB budget ID.
-        resource: The resource path suffix.
-
-    Returns:
-        The full resource URI string.
-    """
-    return f"{_RESOURCE_BASE}/{budget_id}/{resource}"
-
-
-def _resolve_step() -> str:
+def resolve_step() -> str:
     """Return instruction to resolve budget via manage_budgets.
 
     Returns:
@@ -70,13 +55,13 @@ def review_monthly_spending(
     if budget_id:
         return REVIEW_SPENDING_TEMPLATE.format(budget_id=budget_id, month=month)
 
-    resolve = _resolve_step()
+    resolve = resolve_step()
     body = REVIEW_SPENDING_TEMPLATE.format(budget_id="{budget_id}", month=month)
     # Insert resolve step after the header line
     lines = body.split("\n")
     header = lines[0]
     # Renumber steps: existing steps start at 1, shift to start at 2
-    steps = []
+    steps: list[str] = []
     for line in lines[1:]:
         if line and line[0].isdigit():
             dot_idx = line.index(".")
@@ -104,11 +89,11 @@ def enter_transactions(budget_id: str | None = None) -> str:
     if budget_id:
         return ENTER_TRANSACTIONS_TEMPLATE.format(budget_id=budget_id)
 
-    resolve = _resolve_step()
+    resolve = resolve_step()
     body = ENTER_TRANSACTIONS_TEMPLATE.format(budget_id="{budget_id}")
     lines = body.split("\n")
     header = lines[0]
-    steps = []
+    steps: list[str] = []
     for line in lines[1:]:
         if line and line[0].isdigit():
             dot_idx = line.index(".")
@@ -136,11 +121,11 @@ def budget_health_check(budget_id: str | None = None) -> str:
     if budget_id:
         return BUDGET_HEALTH_TEMPLATE.format(budget_id=budget_id)
 
-    resolve = _resolve_step()
+    resolve = resolve_step()
     body = BUDGET_HEALTH_TEMPLATE.format(budget_id="{budget_id}")
     lines = body.split("\n")
     header = lines[0]
-    steps = []
+    steps: list[str] = []
     for line in lines[1:]:
         if line and line[0].isdigit():
             dot_idx = line.index(".")
