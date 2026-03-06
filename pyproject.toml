@@ -5,7 +5,14 @@ description = "MCP server for YNAB -- your AI-powered budget advisor"
 readme = "README.md"
 authors = [{ name = "Alex Levine", email = "awlevine@pm.me" }]
 requires-python = ">=3.13"
-keywords = ["ynab", "mcp", "budget", "model-context-protocol", "advisor", "ynaa"]
+keywords = [
+  "ynab",
+  "mcp",
+  "budget",
+  "model-context-protocol",
+  "advisor",
+  "ynaa",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -27,11 +34,11 @@ Changelog = "https://senivel.github.io/you-need-an-advisor-mcp/changelog/"
 ynaa-mcp = "ynaa_mcp.__main__:main"
 
 [build-system]
-requires = ["hatchling>=1.27"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.9.26,<0.10.0"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/ynaa_mcp"]
+[tool.uv.build-backend]
+module-name = "ynaa_mcp"
 
 [tool.ruff]
 line-length = 88
@@ -111,7 +118,4 @@ dev = [
   "pytest-sugar>=1.1.1",
   "ruff>=0.15.4",
 ]
-docs = [
-    "mkdocs-material>=9.7,<10",
-    "mkdocstrings[python]>=0.26",
-]
+docs = ["mkdocs-material>=9.7,<10", "mkdocstrings[python]>=0.26"]
