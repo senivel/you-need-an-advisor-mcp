@@ -1,5 +1,7 @@
 """YNAB MCP server -- Model Context Protocol server for You Need A Budget."""
 
+__version__ = "1.0.0"  # x-release-please-version
+
 from ynaa_mcp.app import AppContext, mcp
 from ynaa_mcp.budget_resolver import resolve_budget
 from ynaa_mcp.client import YNABClient
@@ -13,6 +15,7 @@ __all__ = [
     "RateLimiter",
     "YNABAPIError",
     "YNABClient",
+    "__version__",
     "dollars_to_milliunits",
     "format_error",
     "mcp",
