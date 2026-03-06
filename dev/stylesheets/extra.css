@@ -1,0 +1,15 @@
+/* YNAB Blurple brand colors */
+
+:root {
+  --md-primary-fg-color: #545bfe;
+  --md-primary-fg-color--light: #8b8fff;
+  --md-primary-fg-color--dark: #3a40b3;
+  --md-accent-fg-color: #545bfe;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #8b8fff;
+  --md-primary-fg-color--light: #545bfe;
+  --md-primary-fg-color--dark: #b5b8ff;
+  --md-accent-fg-color: #8b8fff;
+}
