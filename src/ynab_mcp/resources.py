@@ -14,7 +14,7 @@ from typing import Any
 
 from fastmcp import Context
 
-from ynab_mcp.server import mcp
+from ynab_mcp.app import mcp
 
 
 @mcp.resource("ynab://budgets/{budget_id}/accounts")

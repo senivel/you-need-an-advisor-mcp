@@ -2,27 +2,12 @@
 
 import pytest
 
-from ynab_mcp.server import (
+from ynab_mcp.tools.months import (
     get_month,
     list_money_movement_groups,
     list_money_movements,
     list_months,
 )
-
-
-@pytest.fixture
-def mock_ctx(mocker):
-    """Create a mock MCP Context with a mocked YNABClient.
-
-    Returns:
-        A mock Context with lifespan_context.client set.
-    """
-    client = mocker.AsyncMock()
-    app = mocker.MagicMock()
-    app.client = client
-    ctx = mocker.MagicMock()
-    ctx.lifespan_context = app
-    return ctx
 
 
 def _make_month_summary(  # noqa: PLR0913
@@ -161,7 +146,7 @@ class TestListMonths:
     @pytest.mark.anyio
     async def test_returns_months_with_count_header(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         months = [
@@ -182,7 +167,7 @@ class TestListMonths:
     @pytest.mark.anyio
     async def test_excludes_deleted_months(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         months = [
@@ -200,7 +185,7 @@ class TestListMonths:
     @pytest.mark.anyio
     async def test_age_of_money_none(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         months = [_make_month_summary(age_of_money=None)]
@@ -213,7 +198,7 @@ class TestListMonths:
     @pytest.mark.anyio
     async def test_empty_returns_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.get.return_value = {"months": []}
@@ -229,7 +214,7 @@ class TestGetMonth:
     @pytest.mark.anyio
     async def test_returns_month_detail_with_grouped_categories(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         detail = _make_month_detail()
@@ -250,7 +235,7 @@ class TestGetMonth:
     @pytest.mark.anyio
     async def test_categories_grouped_by_group_name(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         detail = _make_month_detail()
@@ -273,7 +258,7 @@ class TestGetMonth:
     @pytest.mark.anyio
     async def test_normalizes_month_param(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         detail = _make_month_detail()
@@ -292,7 +277,7 @@ class TestListMoneyMovements:
     async def test_budget_wide(self, mock_ctx, mocker):
         """MNTH-03: GET /budgets/{id}/money_movements."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         movements = [
@@ -319,7 +304,7 @@ class TestListMoneyMovements:
     async def test_by_month(self, mock_ctx, mocker):
         """MNTH-04: GET /budgets/{id}/months/{month}/money_movements."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         movements = [_make_money_movement()]
@@ -336,7 +321,7 @@ class TestListMoneyMovements:
     @pytest.mark.anyio
     async def test_empty_returns_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -350,7 +335,7 @@ class TestListMoneyMovements:
     @pytest.mark.anyio
     async def test_shows_category_group(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         movements = [
@@ -375,7 +360,7 @@ class TestListMoneyMovementGroups:
     async def test_budget_wide(self, mock_ctx, mocker):
         """MNTH-05: GET /budgets/{id}/money_movement_groups."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         groups = [
@@ -399,7 +384,7 @@ class TestListMoneyMovementGroups:
     async def test_by_month(self, mock_ctx, mocker):
         """MNTH-06: GET /budgets/{id}/months/{month}/money_movement_groups."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         groups = [_make_money_movement_group()]
@@ -419,7 +404,7 @@ class TestListMoneyMovementGroups:
     @pytest.mark.anyio
     async def test_empty_returns_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.get.return_value = {

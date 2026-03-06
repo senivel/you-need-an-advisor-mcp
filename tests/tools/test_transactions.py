@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.server import (
+from ynab_mcp.tools.transactions import (
     batch_create_transactions,
     batch_update_transactions,
     delete_transaction,
@@ -12,21 +12,6 @@ from ynab_mcp.server import (
     list_transactions,
     manage_transaction,
 )
-
-
-@pytest.fixture
-def mock_ctx(mocker):
-    """Create a mock MCP Context with a mocked YNABClient.
-
-    Returns:
-        A mock Context with lifespan_context.client set.
-    """
-    client = mocker.AsyncMock()
-    app = mocker.MagicMock()
-    app.client = client
-    ctx = mocker.MagicMock()
-    ctx.lifespan_context = app
-    return ctx
 
 
 def _make_transaction(  # noqa: PLR0913
@@ -76,7 +61,7 @@ class TestListTransactions:
     async def test_list_all(self, mock_ctx, mocker):
         """Count header, formatted lines with date|payee|amount|category [status]."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -117,7 +102,7 @@ class TestListTransactions:
     async def test_filter_by_account(self, mock_ctx, mocker):
         """Routes to /accounts/{id}/transactions."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -133,7 +118,7 @@ class TestListTransactions:
     async def test_filter_by_category(self, mock_ctx, mocker):
         """Routes to /categories/{id}/transactions."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -149,7 +134,7 @@ class TestListTransactions:
     async def test_filter_by_payee(self, mock_ctx, mocker):
         """Routes to /payees/{id}/transactions."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -165,7 +150,7 @@ class TestListTransactions:
     async def test_filter_by_month(self, mock_ctx, mocker):
         """Routes to /months/{month}/transactions, normalizes month."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -181,7 +166,7 @@ class TestListTransactions:
     async def test_since_date_query_param(self, mock_ctx, mocker):
         """since_date passed as query param to API."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -197,7 +182,7 @@ class TestListTransactions:
     async def test_until_date_client_side_filter(self, mock_ctx, mocker):
         """until_date filters client-side (transactions after excluded)."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -219,7 +204,7 @@ class TestListTransactions:
     async def test_type_query_param(self, mock_ctx, mocker):
         """Type param (uncategorized, unapproved) passed as query param."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -235,7 +220,7 @@ class TestListTransactions:
     async def test_mutual_exclusivity(self, mock_ctx, mocker):
         """Mutually exclusive filters (>1) raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -248,7 +233,7 @@ class TestListTransactions:
     async def test_limit_truncates(self, mock_ctx, mocker):
         """Limit param truncates with 'Showing X of Y transactions' note."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -269,7 +254,7 @@ class TestListTransactions:
     async def test_empty_result(self, mock_ctx, mocker):
         """Empty result returns 'No transactions found.'."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -284,7 +269,7 @@ class TestListTransactions:
     async def test_no_payee_no_category(self, mock_ctx, mocker):
         """No payee shows '(no payee)', no category shows '(no category)'."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -306,7 +291,7 @@ class TestGetTransaction:
     async def test_full_detail_view(self, mock_ctx, mocker):
         """Returns full detail view with all fields."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -337,7 +322,7 @@ class TestGetTransaction:
     async def test_shows_memo(self, mock_ctx, mocker):
         """Shows memo when present."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -352,7 +337,7 @@ class TestGetTransaction:
     async def test_shows_flag_color(self, mock_ctx, mocker):
         """Shows flag_color when present."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -367,7 +352,7 @@ class TestGetTransaction:
     async def test_shows_transfer_account(self, mock_ctx, mocker):
         """Shows transfer_account_id when present."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -384,7 +369,7 @@ class TestGetTransaction:
     async def test_subtransactions(self, mock_ctx, mocker):
         """Shows subtransactions as indented list with amount, category, memo."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -415,7 +400,7 @@ class TestGetTransaction:
     async def test_no_payee_no_category(self, mock_ctx, mocker):
         """Handles transaction with no payee or category gracefully."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -438,7 +423,7 @@ class TestManageTransaction:
     async def test_create_sends_post(self, mock_ctx, mocker):
         """Create mode (no transaction_id) POSTs with {transaction: body}."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -470,7 +455,7 @@ class TestManageTransaction:
     async def test_create_converts_dollars_to_milliunits(self, mock_ctx, mocker):
         """Create mode converts amount dollars to milliunits."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -492,7 +477,7 @@ class TestManageTransaction:
     async def test_create_includes_optional_fields(self, mock_ctx, mocker):
         """Create mode includes optional fields only when provided."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -527,7 +512,7 @@ class TestManageTransaction:
     async def test_create_excludes_none_optional_fields(self, mock_ctx, mocker):
         """Create mode does not include None optional fields in body."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -551,7 +536,7 @@ class TestManageTransaction:
     async def test_create_missing_account_id_raises(self, mock_ctx, mocker):
         """Create mode missing account_id raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -566,7 +551,7 @@ class TestManageTransaction:
     async def test_create_missing_date_raises(self, mock_ctx, mocker):
         """Create mode missing date raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -581,7 +566,7 @@ class TestManageTransaction:
     async def test_create_missing_amount_raises(self, mock_ctx, mocker):
         """Create mode missing amount raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -596,7 +581,7 @@ class TestManageTransaction:
     async def test_update_sends_put(self, mock_ctx, mocker):
         """Update mode (with transaction_id) sends PUT with only provided fields."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -623,7 +608,7 @@ class TestManageTransaction:
     async def test_update_converts_amount(self, mock_ctx, mocker):
         """Update mode converts amount to milliunits when provided."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -644,7 +629,7 @@ class TestManageTransaction:
     async def test_create_returns_confirmation(self, mock_ctx, mocker):
         """Create mode returns confirmation with key fields."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -673,7 +658,7 @@ class TestManageTransaction:
     async def test_update_returns_confirmation(self, mock_ctx, mocker):
         """Update mode returns confirmation with key fields."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -704,7 +689,7 @@ class TestDeleteTransaction:
     async def test_delete_sends_delete(self, mock_ctx, mocker):
         """delete_transaction sends DELETE and returns confirmation."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.delete.return_value = {
@@ -733,7 +718,7 @@ class TestBatchCreateTransactions:
     async def test_batch_create_posts_with_converted_amounts(self, mock_ctx, mocker):
         """Converts amounts and POSTs with {transactions: [...]}."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -760,7 +745,7 @@ class TestBatchCreateTransactions:
     async def test_batch_create_returns_summary(self, mock_ctx, mocker):
         """Returns summary count and per-transaction ID lines."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -786,7 +771,7 @@ class TestBatchCreateTransactions:
     async def test_batch_create_empty_raises(self, mock_ctx, mocker):
         """Empty batch raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -797,7 +782,7 @@ class TestBatchCreateTransactions:
     async def test_batch_create_includes_duplicate_ids(self, mock_ctx, mocker):
         """Includes duplicate_import_ids in response when present."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -823,7 +808,7 @@ class TestBatchUpdateTransactions:
     async def test_batch_update_patches_with_converted_amounts(self, mock_ctx, mocker):
         """Converts amounts and PATCHes with {transactions: [...]}."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -848,7 +833,7 @@ class TestBatchUpdateTransactions:
     async def test_batch_update_returns_summary(self, mock_ctx, mocker):
         """Returns summary count and per-transaction ID lines."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -874,7 +859,7 @@ class TestBatchUpdateTransactions:
     async def test_batch_update_empty_raises(self, mock_ctx, mocker):
         """Empty batch raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -889,7 +874,7 @@ class TestImportTransactions:
     async def test_import_posts_and_returns_ids(self, mock_ctx, mocker):
         """POSTs to /transactions/import and returns count + IDs."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -909,7 +894,7 @@ class TestImportTransactions:
     async def test_import_empty_result(self, mock_ctx, mocker):
         """Empty import returns 'No transactions to import.'."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {

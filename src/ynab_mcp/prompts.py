@@ -5,7 +5,7 @@ multi-step YNAB tasks efficiently. Each prompt references the
 specific MCP resources to read and tools to call.
 """
 
-from ynab_mcp.server import mcp
+from ynab_mcp.app import mcp
 
 
 _RESOURCE_BASE = "ynab://budgets"

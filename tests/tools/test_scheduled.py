@@ -3,27 +3,12 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.server import (
+from ynab_mcp.tools.scheduled import (
     delete_scheduled_transaction,
     get_scheduled_transaction,
     list_scheduled_transactions,
     manage_scheduled_transaction,
 )
-
-
-@pytest.fixture
-def mock_ctx(mocker):
-    """Create a mock MCP Context with a mocked YNABClient.
-
-    Returns:
-        A mock Context with lifespan_context.client set.
-    """
-    client = mocker.AsyncMock()
-    app = mocker.MagicMock()
-    app.client = client
-    ctx = mocker.MagicMock()
-    ctx.lifespan_context = app
-    return ctx
 
 
 def _make_scheduled_transaction(  # noqa: PLR0913
@@ -77,9 +62,9 @@ class TestListScheduledTransactions:
 
     @pytest.mark.anyio
     async def test_list_returns_count_and_formatted_lines(self, mock_ctx, mocker):
-        """Count header and formatted lines with date_next|payee|amount|category [frequency]."""
+        """Count header with date_next|payee|amount|category [frequency]."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -119,7 +104,7 @@ class TestListScheduledTransactions:
     async def test_list_excludes_deleted(self, mock_ctx, mocker):
         """Deleted scheduled transactions are excluded from listing."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -139,7 +124,7 @@ class TestListScheduledTransactions:
     async def test_list_uses_date_first_when_no_date_next(self, mock_ctx, mocker):
         """Falls back to date_first when date_next is None."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -160,7 +145,7 @@ class TestListScheduledTransactions:
     async def test_list_empty(self, mock_ctx, mocker):
         """Empty result returns appropriate message."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -179,7 +164,7 @@ class TestGetScheduledTransaction:
     async def test_full_detail(self, mock_ctx, mocker):
         """Returns full detail with frequency, first date, next date."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -216,7 +201,7 @@ class TestGetScheduledTransaction:
     async def test_subtransactions(self, mock_ctx, mocker):
         """Shows subtransactions as indented list."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -249,7 +234,7 @@ class TestGetScheduledTransaction:
     async def test_no_date_next(self, mock_ctx, mocker):
         """Omits next date line when date_next is None."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -272,7 +257,7 @@ class TestManageScheduledTransaction:
     async def test_create_sends_post(self, mock_ctx, mocker):
         """Create mode (no scheduled_transaction_id) POSTs with required fields."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -309,7 +294,7 @@ class TestManageScheduledTransaction:
     async def test_create_missing_required_raises(self, mock_ctx, mocker):
         """Create mode missing account_id or date raises ToolError."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -325,7 +310,7 @@ class TestManageScheduledTransaction:
     async def test_update_sends_put(self, mock_ctx, mocker):
         """Update mode (with scheduled_transaction_id) sends PUT."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -352,7 +337,7 @@ class TestManageScheduledTransaction:
     async def test_create_returns_confirmation(self, mock_ctx, mocker):
         """Create returns confirmation with payee, amount, frequency."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -387,7 +372,7 @@ class TestDeleteScheduledTransaction:
     async def test_delete_sends_delete(self, mock_ctx, mocker):
         """delete_scheduled_transaction sends DELETE and returns confirmation."""
         mocker.patch(
-            "ynab_mcp.server.resolve_budget",
+            "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.delete.return_value = {
