@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+
+- **Documentation site** -- Complete MkDocs Material site with YNAB brand colors, user guide, API reference, and contributing docs
+- **Workflow guide prompts** -- 6 step-by-step workflow templates: budget setup, debt payoff, financial review, savings planning, overspending recovery, new month prep
+- **Analysis prompts** -- 6 analysis templates: spending trends, budget health, savings progress, income vs. expenses, category deep dive, financial snapshot
+- **Core prompts** -- 3 foundational prompts: budget overview, transaction search, category analysis
+- **YNAB methodology resources** -- 5 knowledge guides embedded as MCP resources: Four Rules, overspending, credit card management, reconciliation, Age of Money
+- **Template system** -- Markdown-based prompt templates loaded via `importlib.resources`
+
+### Changed
+
+- **Tool consolidation** -- Reduced from 30+ individual tools to 8 consolidated tools (`manage_budgets`, `manage_accounts`, `manage_categories`, `manage_transactions`, `manage_payees`, `manage_months`, `manage_scheduled_transactions`, `manage_cache`) using action-based dispatch
+- **Modular architecture** -- Refactored monolithic `server.py` into domain-specific modules: `tools/`, `prompts.py`, `analysis.py`, `workflows.py`, `resources.py`, `knowledge.py`
+- **Entry point** -- Added `ynab-mcp` console script via pyproject.toml for `uvx ynab-mcp` usage
+
+### Improved
+
+- **TTL cache** -- Uses `time.monotonic()` for clock-immune expiration with keyword-only `cache` parameter
+- **Rate limiter** -- Sliding window implementation with proactive throttling at 190/200 requests
+- **Type safety** -- TypedDicts for API response shapes, Pydantic models for domain objects, `py.typed` marker
+- **Error handling** -- Structured `YNABAPIError` with HTTP status codes and actionable messages
+
 ## [0.1.0] - 2026-03-04
 
 ### Added

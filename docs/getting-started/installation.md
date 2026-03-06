@@ -19,18 +19,43 @@
 
 ## Install
 
-This is an MCP server, not a standalone CLI. It's meant to be configured in an MCP client (like Claude Desktop). There are two ways to make it available:
+=== "uvx (recommended)"
 
-**As a project dependency:**
+    Run directly without installing -- the simplest option:
 
-```bash
-uv add ynab-mcp
-```
+    ```bash
+    uvx ynab-mcp
+    ```
 
-**Run directly without installing:**
+    This downloads and runs the latest version in an isolated environment. No project setup needed.
 
-```bash
-uvx ynab-mcp
-```
+=== "pip install"
 
-See the [Quickstart](quickstart.md) for how to configure your MCP client to use the server.
+    Install as a package:
+
+    ```bash
+    pip install ynab-mcp
+    ```
+
+    Or with uv:
+
+    ```bash
+    uv add ynab-mcp
+    ```
+
+=== "Development setup"
+
+    Clone and install for development:
+
+    ```bash
+    git clone https://github.com/senivel/ynab-mcp.git
+    cd ynab-mcp
+    uv sync --group dev --group docs
+    uv run pre-commit install
+    ```
+
+    See the [Contributing guide](../contributing/index.md) for full development setup details.
+
+## Next steps
+
+Head to the [Quickstart](quickstart.md) to configure your MCP client and start asking questions about your budget.
