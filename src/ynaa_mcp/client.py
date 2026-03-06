@@ -111,7 +111,7 @@ class YNABClient:
         self,
         method: str,
         path: str,
-        **kwargs: Any,  # noqa: ANN401
+        **kwargs: Any,
     ) -> dict[str, Any]:
         """Send a request to the YNAB API with rate limiting and conversion.
 

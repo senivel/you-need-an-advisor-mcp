@@ -29,3 +29,11 @@ repos:
         args: [--fix-only, --unsafe-fixes, --show-fixes]
       - id: ruff-format
         name: ruff format
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright type check
+        entry: uv run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
