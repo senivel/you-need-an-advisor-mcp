@@ -14,6 +14,3 @@ from ynab_mcp.app import AppContext, lifespan, mcp
 
 
 __all__ = ["AppContext", "lifespan", "mcp"]
-
-if __name__ == "__main__":
-    mcp.run()
