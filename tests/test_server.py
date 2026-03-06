@@ -5,8 +5,8 @@ import inspect
 
 import pytest
 
+from ynab_mcp.app import AppContext, lifespan
 from ynab_mcp.client import YNABClient
-from ynab_mcp.server import AppContext, lifespan
 
 
 class TestLifespanStartup:
@@ -27,7 +27,7 @@ class TestLifespanStartup:
         """Invalid PAT (validate_token fails) causes startup failure."""
         monkeypatch.setenv("YNAB_PAT", "invalid-token")
 
-        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -49,7 +49,7 @@ class TestLifespanStartup:
         """Valid PAT allows lifespan to complete and yield AppContext."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
 
-        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -70,7 +70,7 @@ class TestLifespanStartup:
         """AppContext.client is a YNABClient instance."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
 
-        mock_http_cls = mocker.patch("ynab_mcp.server.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -106,13 +106,11 @@ class TestServerCompliance:
         assert print_calls == [], "server.py must not call print()"
 
     def test_logging_configured_to_stderr(self):
-        """Logging basicConfig uses stderr, not stdout."""
+        """Logging basicConfig uses stderr, not stdout (in app.py)."""
         source = inspect.getsource(
-            __import__("ynab_mcp.server", fromlist=["server"]),
+            __import__("ynab_mcp.app", fromlist=["app"]),
         )
         # Verify logging is configured to stderr in source
-        assert "stream=sys.stderr" in source, (
-            "server.py must configure logging to stderr"
-        )
+        assert "stream=sys.stderr" in source, "app.py must configure logging to stderr"
         # Verify stdout is never used for logging
         assert "stream=sys.stdout" not in source

@@ -59,6 +59,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/__init__.py" = ["D104", "F401"]
 "tests/**.py" = ["ANN", "D102", "PLR2004", "PLR6301", "RUF069"]
+"src/ynab_mcp/server.py" = ["F401", "E402"]
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
