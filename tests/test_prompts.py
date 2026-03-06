@@ -2,10 +2,51 @@
 
 import ynab_mcp.prompts as prompts_module
 from ynab_mcp.prompts import (
+    BUDGET_HEALTH_TEMPLATE,
+    ENTER_TRANSACTIONS_TEMPLATE,
+    REVIEW_SPENDING_TEMPLATE,
     budget_health_check,
     enter_transactions,
     review_monthly_spending,
 )
+
+
+class TestTemplateConstants:
+    """Tests for template loading."""
+
+    def test_review_spending_template_loaded(self):
+        """Template constant is a non-empty string."""
+        assert isinstance(REVIEW_SPENDING_TEMPLATE, str)
+        assert len(REVIEW_SPENDING_TEMPLATE) > 0
+
+    def test_enter_transactions_template_loaded(self):
+        """Template constant is a non-empty string."""
+        assert isinstance(ENTER_TRANSACTIONS_TEMPLATE, str)
+        assert len(ENTER_TRANSACTIONS_TEMPLATE) > 0
+
+    def test_budget_health_template_loaded(self):
+        """Template constant is a non-empty string."""
+        assert isinstance(BUDGET_HEALTH_TEMPLATE, str)
+        assert len(BUDGET_HEALTH_TEMPLATE) > 0
+
+    def test_review_spending_format_placeholders(self):
+        """Template can be formatted without errors."""
+        result = REVIEW_SPENDING_TEMPLATE.format(
+            budget_id="test-id",
+            month="2026-03",
+        )
+        assert "test-id" in result
+        assert "2026-03" in result
+
+    def test_enter_transactions_format_placeholders(self):
+        """Template can be formatted without errors."""
+        result = ENTER_TRANSACTIONS_TEMPLATE.format(budget_id="test-id")
+        assert "test-id" in result
+
+    def test_budget_health_format_placeholders(self):
+        """Template can be formatted without errors."""
+        result = BUDGET_HEALTH_TEMPLATE.format(budget_id="test-id")
+        assert "test-id" in result
 
 
 class TestReviewMonthlySpending:
@@ -19,11 +60,11 @@ class TestReviewMonthlySpending:
         assert len(result) > 0
 
     def test_references_tools(self):
-        """Output mentions required tool names."""
+        """Output mentions required consolidated tool names."""
         result = review_monthly_spending(month="2026-03")
 
-        assert "list_transactions" in result
-        assert "get_month_detail" in result
+        assert "manage_transactions" in result
+        assert "manage_months" in result
 
     def test_references_resources(self):
         """Output mentions ynab:// resource URI."""
@@ -47,17 +88,17 @@ class TestReviewMonthlySpending:
         """Fallback instruction to resolve budget when not provided."""
         result = review_monthly_spending(month="2026-03")
 
-        assert "list_budgets" in result
+        assert "manage_budgets" in result
 
 
 class TestEnterTransactions:
     """Tests for enter_transactions prompt."""
 
     def test_references_create_tool(self):
-        """Output mentions create_transaction tool."""
+        """Output mentions manage_transactions tool."""
         result = enter_transactions()
 
-        assert "create_transaction" in result
+        assert "manage_transactions" in result
 
     def test_with_budget_id(self):
         """Budget ID is included in output when provided."""
@@ -69,7 +110,7 @@ class TestEnterTransactions:
         """Fallback instruction when no budget_id."""
         result = enter_transactions()
 
-        assert "list_budgets" in result
+        assert "manage_budgets" in result
 
 
 class TestBudgetHealthCheck:
@@ -92,7 +133,7 @@ class TestBudgetHealthCheck:
         """Fallback instruction when no budget_id."""
         result = budget_health_check()
 
-        assert "list_budgets" in result
+        assert "manage_budgets" in result
 
 
 class TestPromptRegistration:

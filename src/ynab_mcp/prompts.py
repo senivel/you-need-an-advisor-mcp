@@ -3,12 +3,28 @@
 Provides guided workflow instructions that help LLMs perform
 multi-step YNAB tasks efficiently. Each prompt references the
 specific MCP resources to read and tools to call.
+
+Templates are loaded from .md files in the templates/prompts/
+subpackage via importlib.resources.
 """
+
+from importlib import resources as pkg_resources
 
 from ynab_mcp.app import mcp
 
 
 _RESOURCE_BASE = "ynab://budgets"
+
+_templates = pkg_resources.files("ynab_mcp.templates.prompts")
+REVIEW_SPENDING_TEMPLATE = _templates.joinpath(
+    "review-monthly-spending.md",
+).read_text(encoding="utf-8")
+ENTER_TRANSACTIONS_TEMPLATE = _templates.joinpath(
+    "enter-transactions.md",
+).read_text(encoding="utf-8")
+BUDGET_HEALTH_TEMPLATE = _templates.joinpath(
+    "budget-health-check.md",
+).read_text(encoding="utf-8")
 
 
 def _resource_uri(budget_id: str, resource: str) -> str:
@@ -25,12 +41,12 @@ def _resource_uri(budget_id: str, resource: str) -> str:
 
 
 def _resolve_step() -> str:
-    """Return instruction to resolve budget via list_budgets.
+    """Return instruction to resolve budget via manage_budgets.
 
     Returns:
         Step text instructing LLM to resolve the budget ID.
     """
-    return "1. Use the `list_budgets` tool to find the budget ID."
+    return '1. Use the `manage_budgets` tool with action="list" to find the budget ID.'
 
 
 @mcp.prompt()
@@ -51,40 +67,24 @@ def review_monthly_spending(
     Returns:
         Guided workflow text for monthly spending review.
     """
-    steps: list[str] = []
-
     if budget_id:
-        cat_uri = _resource_uri(budget_id, "categories")
-    else:
-        cat_uri = f"{_RESOURCE_BASE}/{{budget_id}}/categories"
-        steps.append(_resolve_step())
+        return REVIEW_SPENDING_TEMPLATE.format(budget_id=budget_id, month=month)
 
-    steps.extend([
-        (
-            f"Read the categories resource at `{cat_uri}` "
-            "to understand the budget structure."
-        ),
-        (
-            f'Use the `get_month_detail` tool with month="{month}" '
-            "to see the month summary."
-        ),
-        (
-            f'Use the `list_transactions` tool with month="{month}" '
-            "to see all transactions for the month."
-        ),
-        (
-            "Summarize spending by category, comparing "
-            "budgeted amounts vs actual activity."
-        ),
-        ("Highlight any categories that are over budget (negative balance)."),
-        (
-            "Note the overall budget health: to-be-budgeted "
-            "amount, total income vs total spending."
-        ),
-    ])
-
-    numbered = "\n".join(f"{i}. {step}" for i, step in enumerate(steps, start=1))
-    return f"Review monthly spending for {month}.\n\n{numbered}"
+    resolve = _resolve_step()
+    body = REVIEW_SPENDING_TEMPLATE.format(budget_id="{budget_id}", month=month)
+    # Insert resolve step after the header line
+    lines = body.split("\n")
+    header = lines[0]
+    # Renumber steps: existing steps start at 1, shift to start at 2
+    steps = []
+    for line in lines[1:]:
+        if line and line[0].isdigit():
+            dot_idx = line.index(".")
+            old_num = int(line[:dot_idx])
+            steps.append(f"{old_num + 1}{line[dot_idx:]}")
+        else:
+            steps.append(line)
+    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
 
 
 @mcp.prompt()
@@ -101,33 +101,22 @@ def enter_transactions(budget_id: str | None = None) -> str:
     Returns:
         Guided workflow text for transaction entry.
     """
-    steps: list[str] = []
-
     if budget_id:
-        acct_uri = _resource_uri(budget_id, "accounts")
-        cat_uri = _resource_uri(budget_id, "categories")
-    else:
-        acct_uri = f"{_RESOURCE_BASE}/{{budget_id}}/accounts"
-        cat_uri = f"{_RESOURCE_BASE}/{{budget_id}}/categories"
-        steps.append(_resolve_step())
+        return ENTER_TRANSACTIONS_TEMPLATE.format(budget_id=budget_id)
 
-    steps.extend([
-        (f"Read the accounts resource at `{acct_uri}` to know the available accounts."),
-        (
-            f"Read the categories resource at `{cat_uri}` "
-            "to know the available categories."
-        ),
-        (
-            "Ask the user for transaction details: date, "
-            "payee, amount, account, category, and memo."
-        ),
-        "Use the `create_transaction` tool to enter each transaction.",
-        "Confirm the transaction details after each entry.",
-        "Ask if there are more transactions to enter.",
-    ])
-
-    numbered = "\n".join(f"{i}. {step}" for i, step in enumerate(steps, start=1))
-    return f"Enter transactions into the budget.\n\n{numbered}"
+    resolve = _resolve_step()
+    body = ENTER_TRANSACTIONS_TEMPLATE.format(budget_id="{budget_id}")
+    lines = body.split("\n")
+    header = lines[0]
+    steps = []
+    for line in lines[1:]:
+        if line and line[0].isdigit():
+            dot_idx = line.index(".")
+            old_num = int(line[:dot_idx])
+            steps.append(f"{old_num + 1}{line[dot_idx:]}")
+        else:
+            steps.append(line)
+    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
 
 
 @mcp.prompt()
@@ -144,30 +133,19 @@ def budget_health_check(budget_id: str | None = None) -> str:
     Returns:
         Guided workflow text for budget health review.
     """
-    steps: list[str] = []
-
     if budget_id:
-        acct_uri = _resource_uri(budget_id, "accounts")
-        cat_uri = _resource_uri(budget_id, "categories")
-    else:
-        acct_uri = f"{_RESOURCE_BASE}/{{budget_id}}/accounts"
-        cat_uri = f"{_RESOURCE_BASE}/{{budget_id}}/categories"
-        steps.append(_resolve_step())
+        return BUDGET_HEALTH_TEMPLATE.format(budget_id=budget_id)
 
-    steps.extend([
-        (
-            f"Read the accounts resource at `{acct_uri}` "
-            "to see current account balances."
-        ),
-        (f"Read the categories resource at `{cat_uri}` to see budget status."),
-        "Use the `get_budget` tool for the budget-level summary.",
-        (
-            "Report on: total account balances, "
-            "to-be-budgeted amount, overspent categories, "
-            "and underfunded goals."
-        ),
-        "Suggest actionable next steps to improve budget health.",
-    ])
-
-    numbered = "\n".join(f"{i}. {step}" for i, step in enumerate(steps, start=1))
-    return f"Perform a budget health check.\n\n{numbered}"
+    resolve = _resolve_step()
+    body = BUDGET_HEALTH_TEMPLATE.format(budget_id="{budget_id}")
+    lines = body.split("\n")
+    header = lines[0]
+    steps = []
+    for line in lines[1:]:
+        if line and line[0].isdigit():
+            dot_idx = line.index(".")
+            old_num = int(line[:dot_idx])
+            steps.append(f"{old_num + 1}{line[dot_idx:]}")
+        else:
+            steps.append(line)
+    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
