@@ -1,4 +1,6 @@
-"""Transaction tools: list, detail, create/update, delete, batch, import."""
+"""Transaction tools: consolidated manage_transactions dispatch."""
+
+from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -126,46 +128,38 @@ def _format_batch_result(data: dict, verb: str) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool
-async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-    since_date: str | None = None,
-    until_date: str | None = None,
-    type: str | None = None,  # noqa: A002
-    account_id: str | None = None,
-    category_id: str | None = None,
-    payee_id: str | None = None,
-    month: str | None = None,
-    limit: int | None = None,
+async def _list_transactions(  # noqa: PLR0913, PLR0917, PLR0912, C901
+    app: AppContext,
+    budget_id: str,
+    since_date: str | None,
+    until_date: str | None,
+    type: str | None,  # noqa: A002
+    account_id: str | None,
+    category_id: str | None,
+    payee_id: str | None,
+    month: str | None,
+    limit: int | None,
 ) -> str:
-    """List transactions in a YNAB budget with optional filtering.
-
-    Routes to different YNAB API endpoints based on which filter param
-    is provided. Only one of ``account_id``, ``category_id``, ``payee_id``,
-    or ``month`` may be specified at a time.
+    """List transactions with optional filtering.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
-        since_date: Only return transactions on or after this date (ISO).
-        until_date: Only return transactions on or before this date (ISO,
-            applied client-side).
-        type: Filter by transaction type ("uncategorized" or "unapproved").
-        account_id: Filter by account (routes to account transactions endpoint).
-        category_id: Filter by category (routes to category transactions endpoint).
-        payee_id: Filter by payee (routes to payee transactions endpoint).
-        month: Filter by month (routes to month transactions endpoint).
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
+        since_date: Only return transactions on or after this date.
+        until_date: Only return transactions on or before this date.
+        type: Filter by transaction type.
+        account_id: Filter by account.
+        category_id: Filter by category.
+        payee_id: Filter by payee.
+        month: Filter by month.
         limit: Maximum number of transactions to return.
 
     Returns:
-        Structured text with count header and transaction lines,
-        or "No transactions found." if none match.
+        Structured text with transaction listings.
 
     Raises:
         ToolError: If more than one filter param is provided.
     """
-    # Validate mutual exclusivity
     filters = [account_id, category_id, payee_id, month]
     active_filters = sum(1 for f in filters if f is not None)
     if active_filters > 1:
@@ -175,12 +169,6 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
         )
         raise ToolError(msg)
 
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
-    # Determine API path based on filter
     if account_id:
         path = f"/budgets/{budget_id}/accounts/{account_id}/transactions"
     elif category_id:
@@ -193,7 +181,6 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
     else:
         path = f"/budgets/{budget_id}/transactions"
 
-    # Build query params
     params: dict[str, str] = {}
     if since_date:
         params["since_date"] = since_date
@@ -203,7 +190,6 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
     data = await app.client.get(path, params=params)
     transactions = data["transactions"]
 
-    # Client-side until_date filter
     if until_date:
         transactions = [t for t in transactions if t["date"] <= until_date]
 
@@ -212,7 +198,6 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
 
     total = len(transactions)
 
-    # Apply limit
     if limit and total > limit:
         header = f"Showing {limit} of {total} transactions:"
         transactions = transactions[:limit]
@@ -227,91 +212,55 @@ async def list_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0912
     return "\n".join(lines)
 
 
-@mcp.tool
-async def get_transaction(
-    ctx: Context,
+async def _get_transaction(
+    app: AppContext,
+    budget_id: str,
     transaction_id: str,
-    budget_id_or_name: str = "last-used",
 ) -> str:
-    """Get detailed information about a specific YNAB transaction.
-
-    Returns all transaction fields including payee, amount, account,
-    category, cleared status, approval, and optional fields (memo,
-    flag, transfer). Subtransactions are shown as an indented list.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        transaction_id: The transaction UUID.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+    """Get detailed information about a specific transaction.
 
     Returns:
         Structured text with full transaction detail view.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.get(f"/budgets/{budget_id}/transactions/{transaction_id}")
     txn = data["transaction"]
-
     lines = _format_transaction_detail(txn)
     return "\n".join(lines)
 
 
-@mcp.tool
-async def manage_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-    transaction_id: str | None = None,
-    account_id: str | None = None,
-    date: str | None = None,
-    amount: float | None = None,
-    payee_name: str | None = None,
-    payee_id: str | None = None,
-    category_id: str | None = None,
-    memo: str | None = None,
-    cleared: str | None = None,
-    approved: bool | None = None,  # noqa: FBT001
-    flag_color: str | None = None,
+async def _create_transaction(  # noqa: PLR0913, PLR0917, C901
+    app: AppContext,
+    budget_id: str,
+    account_id: str | None,
+    date: str | None,
+    amount: float | None,
+    payee_name: str | None,
+    payee_id: str | None,
+    category_id: str | None,
+    memo: str | None,
+    cleared: str | None,
+    approved: bool | None,  # noqa: FBT001
+    flag_color: str | None,
 ) -> str:
-    """Create or update a YNAB transaction.
-
-    Without ``transaction_id``: creates a new transaction (POST).
-    Requires ``account_id``, ``date``, and ``amount``.
-    With ``transaction_id``: updates an existing transaction (PUT),
-    only sending fields that are not None.
-
-    Dollar amounts for ``amount`` are converted to YNAB milliunits.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
-        transaction_id: If provided, update this transaction. If None, create new.
-        account_id: Account UUID (required for create).
-        date: Transaction date as ISO string (required for create).
-        amount: Transaction amount in dollars (required for create, converted
-            to milliunits).
-        payee_name: Payee display name.
-        payee_id: Payee UUID.
-        category_id: Category UUID.
-        memo: Transaction memo.
-        cleared: Cleared status ("cleared", "uncleared", "reconciled").
-        approved: Whether the transaction is approved.
-        flag_color: Flag color for the transaction.
+    """Create a new transaction.
 
     Returns:
-        Confirmation text with key transaction fields.
+        Confirmation text.
 
     Raises:
-        ToolError: If creating without required fields (account_id, date, amount).
+        ToolError: If required fields are missing.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
+    missing = []
+    if account_id is None:
+        missing.append("account_id")
+    if date is None:
+        missing.append("date")
+    if amount is None:
+        missing.append("amount")
+    if missing:
+        msg = f"Create requires: {', '.join(missing)}"
+        raise ToolError(msg)
 
-    # Optional fields shared between create and update
     optional_fields: dict[str, str | bool] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
@@ -328,35 +277,58 @@ async def manage_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
     if flag_color is not None:
         optional_fields["flag_color"] = flag_color
 
-    if transaction_id is None:
-        # CREATE mode
-        missing = []
-        if account_id is None:
-            missing.append("account_id")
-        if date is None:
-            missing.append("date")
-        if amount is None:
-            missing.append("amount")
-        if missing:
-            msg = f"Create requires: {', '.join(missing)}"
-            raise ToolError(msg)
+    body: dict = {
+        "account_id": account_id,
+        "date": date,
+        "amount": dollars_to_milliunits(amount),  # type: ignore[arg-type]
+        **optional_fields,
+    }
 
-        body: dict = {
-            "account_id": account_id,
-            "date": date,
-            "amount": dollars_to_milliunits(amount),  # type: ignore[arg-type]
-            **optional_fields,
-        }
+    data = await app.client.post(
+        f"/budgets/{budget_id}/transactions",
+        json={"transaction": body},
+    )
+    txn = data["transaction"]
+    return _format_transaction_confirmation("created", txn)
 
-        data = await app.client.post(
-            f"/budgets/{budget_id}/transactions",
-            json={"transaction": body},
-        )
-        txn = data["transaction"]
-        return _format_transaction_confirmation("created", txn)
 
-    # UPDATE mode
-    body = {**optional_fields}
+async def _update_transaction(  # noqa: PLR0913, PLR0917, C901
+    app: AppContext,
+    budget_id: str,
+    transaction_id: str,
+    account_id: str | None,
+    date: str | None,
+    amount: float | None,
+    payee_name: str | None,
+    payee_id: str | None,
+    category_id: str | None,
+    memo: str | None,
+    cleared: str | None,
+    approved: bool | None,  # noqa: FBT001
+    flag_color: str | None,
+) -> str:
+    """Update an existing transaction.
+
+    Returns:
+        Confirmation text.
+    """
+    optional_fields: dict[str, str | bool] = {}
+    if payee_name is not None:
+        optional_fields["payee_name"] = payee_name
+    if payee_id is not None:
+        optional_fields["payee_id"] = payee_id
+    if category_id is not None:
+        optional_fields["category_id"] = category_id
+    if memo is not None:
+        optional_fields["memo"] = memo
+    if cleared is not None:
+        optional_fields["cleared"] = cleared
+    if approved is not None:
+        optional_fields["approved"] = approved
+    if flag_color is not None:
+        optional_fields["flag_color"] = flag_color
+
+    body: dict = {**optional_fields}
     if amount is not None:
         body["amount"] = dollars_to_milliunits(amount)
     if date is not None:
@@ -372,30 +344,16 @@ async def manage_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
     return _format_transaction_confirmation("updated", txn)
 
 
-@mcp.tool
-async def delete_transaction(
-    ctx: Context,
+async def _delete_transaction(
+    app: AppContext,
+    budget_id: str,
     transaction_id: str,
-    budget_id_or_name: str = "last-used",
 ) -> str:
-    """Delete a YNAB transaction.
-
-    Sends a DELETE request for the specified transaction and returns
-    a confirmation with the deleted transaction's key fields.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        transaction_id: The transaction UUID to delete.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+    """Delete a transaction.
 
     Returns:
-        Confirmation text with deleted transaction details.
+        Confirmation text.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.delete(
         f"/budgets/{budget_id}/transactions/{transaction_id}",
     )
@@ -403,37 +361,22 @@ async def delete_transaction(
     return _format_transaction_confirmation("deleted", txn)
 
 
-@mcp.tool
-async def batch_create_transactions(
-    ctx: Context,
-    transactions: list[dict],
-    budget_id_or_name: str = "last-used",
+async def _batch_create_transactions(
+    app: AppContext,
+    budget_id: str,
+    transactions: list[dict] | None,
 ) -> str:
-    """Create multiple YNAB transactions in a single API call.
-
-    Each transaction dict should contain fields matching the YNAB API
-    (account_id, date, amount, etc.). Dollar amounts in ``amount``
-    fields are automatically converted to milliunits.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        transactions: List of transaction dicts to create.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+    """Create multiple transactions in a single API call.
 
     Returns:
         Summary with count of created transactions and their IDs.
 
     Raises:
-        ToolError: If transactions list is empty.
+        ToolError: If transactions list is empty or None.
     """
     if not transactions:
         msg = "Transactions list must not be empty."
         raise ToolError(msg)
-
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
 
     processed = []
     for txn in transactions:
@@ -449,36 +392,22 @@ async def batch_create_transactions(
     return _format_batch_result(data, "created")
 
 
-@mcp.tool
-async def batch_update_transactions(
-    ctx: Context,
-    transactions: list[dict],
-    budget_id_or_name: str = "last-used",
+async def _batch_update_transactions(
+    app: AppContext,
+    budget_id: str,
+    transactions: list[dict] | None,
 ) -> str:
-    """Update multiple YNAB transactions in a single API call.
-
-    Each transaction dict must include an ``id`` field. Dollar amounts
-    in ``amount`` fields are automatically converted to milliunits.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        transactions: List of transaction dicts with IDs to update.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+    """Update multiple transactions in a single API call.
 
     Returns:
         Summary with count of updated transactions and their IDs.
 
     Raises:
-        ToolError: If transactions list is empty.
+        ToolError: If transactions list is empty or None.
     """
     if not transactions:
         msg = "Transactions list must not be empty."
         raise ToolError(msg)
-
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
 
     processed = []
     for txn in transactions:
@@ -494,29 +423,12 @@ async def batch_update_transactions(
     return _format_batch_result(data, "updated")
 
 
-@mcp.tool
-async def import_transactions(
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-) -> str:
+async def _import_transactions(app: AppContext, budget_id: str) -> str:
     """Trigger import of transactions from linked accounts.
-
-    Calls the YNAB import endpoint which pulls transactions from
-    linked financial institutions. Returns the count and IDs of
-    newly imported transactions.
-
-    Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
 
     Returns:
         Summary of imported transactions, or message if none imported.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.post(f"/budgets/{budget_id}/transactions/import")
     txn_ids = data.get("transaction_ids", [])
 
@@ -528,3 +440,167 @@ async def import_transactions(
     lines = [f"{count} {noun} imported:"]
     lines.extend(f"  - {txn_id}" for txn_id in txn_ids)
     return "\n".join(lines)
+
+
+@mcp.tool
+async def manage_transactions(  # noqa: PLR0913, PLR0917, C901, PLR0911
+    ctx: Context,
+    action: Literal[
+        "list",
+        "get",
+        "create",
+        "update",
+        "delete",
+        "batch_create",
+        "batch_update",
+        "import",
+    ],
+    budget_id_or_name: str = "last-used",
+    transaction_id: str | None = None,
+    account_id: str | None = None,
+    date: str | None = None,
+    amount: float | None = None,
+    payee_name: str | None = None,
+    payee_id: str | None = None,
+    category_id: str | None = None,
+    memo: str | None = None,
+    cleared: str | None = None,
+    approved: bool | None = None,  # noqa: FBT001
+    flag_color: str | None = None,
+    since_date: str | None = None,
+    until_date: str | None = None,
+    type: str | None = None,  # noqa: A002
+    month: str | None = None,
+    limit: int | None = None,
+    transactions: list[dict] | None = None,
+) -> str:
+    """Manage YNAB transactions: list, get, create, update, delete, batch, import.
+
+    Dispatches to the appropriate action based on the ``action`` parameter.
+
+    Actions:
+        list: List transactions with optional filtering.
+            Params: budget_id_or_name, since_date, until_date, type,
+            account_id, category_id, payee_id, month, limit.
+            Only one of account_id/category_id/payee_id/month at a time.
+        get: Get full detail for a transaction.
+            Params: budget_id_or_name, transaction_id (required).
+        create: Create a new transaction.
+            Params: budget_id_or_name, account_id (required), date (required),
+            amount (required), payee_name, payee_id, category_id, memo,
+            cleared, approved, flag_color.
+        update: Update an existing transaction.
+            Params: budget_id_or_name, transaction_id (required),
+            plus any optional fields to change.
+        delete: Delete a transaction.
+            Params: budget_id_or_name, transaction_id (required).
+        batch_create: Create multiple transactions at once.
+            Params: budget_id_or_name, transactions (required, list[dict]).
+        batch_update: Update multiple transactions at once.
+            Params: budget_id_or_name, transactions (required, list[dict]).
+        import: Import transactions from linked bank accounts.
+            Params: budget_id_or_name only.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        action: The operation to perform.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        transaction_id: Transaction UUID (required for get, update, delete).
+        account_id: Account UUID (required for create, filter for list).
+        date: Transaction date as ISO string (required for create).
+        amount: Amount in dollars (required for create, converted to milliunits).
+        payee_name: Payee display name.
+        payee_id: Payee UUID (filter for list, field for create/update).
+        category_id: Category UUID (filter for list, field for create/update).
+        memo: Transaction memo.
+        cleared: Cleared status ("cleared", "uncleared", "reconciled").
+        approved: Whether the transaction is approved.
+        flag_color: Flag color for the transaction.
+        since_date: Only return transactions on or after this date (list only).
+        until_date: Only return transactions on or before this date (list only).
+        type: Filter by type ("uncategorized" or "unapproved", list only).
+        month: Filter by month (list only, "YYYY-MM" or "YYYY-MM-DD").
+        limit: Maximum number of transactions to return (list only).
+        transactions: List of transaction dicts (batch_create/batch_update only).
+
+    Returns:
+        Structured text with the requested transaction data.
+
+    Raises:
+        ToolError: If required parameters for the action are missing.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
+
+    if action == "list":
+        return await _list_transactions(
+            app,
+            budget_id,
+            since_date,
+            until_date,
+            type,
+            account_id,
+            category_id,
+            payee_id,
+            month,
+            limit,
+        )
+
+    if action == "get":
+        if transaction_id is None:
+            msg = "action='get' requires 'transaction_id'"
+            raise ToolError(msg)
+        return await _get_transaction(app, budget_id, transaction_id)
+
+    if action == "create":
+        return await _create_transaction(
+            app,
+            budget_id,
+            account_id,
+            date,
+            amount,
+            payee_name,
+            payee_id,
+            category_id,
+            memo,
+            cleared,
+            approved,
+            flag_color,
+        )
+
+    if action == "update":
+        if transaction_id is None:
+            msg = "action='update' requires 'transaction_id'"
+            raise ToolError(msg)
+        return await _update_transaction(
+            app,
+            budget_id,
+            transaction_id,
+            account_id,
+            date,
+            amount,
+            payee_name,
+            payee_id,
+            category_id,
+            memo,
+            cleared,
+            approved,
+            flag_color,
+        )
+
+    if action == "delete":
+        if transaction_id is None:
+            msg = "action='delete' requires 'transaction_id'"
+            raise ToolError(msg)
+        return await _delete_transaction(app, budget_id, transaction_id)
+
+    if action == "batch_create":
+        return await _batch_create_transactions(app, budget_id, transactions)
+
+    if action == "batch_update":
+        return await _batch_update_transactions(app, budget_id, transactions)
+
+    # Last action: import
+    return await _import_transactions(app, budget_id)
