@@ -75,6 +75,11 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 skip-magic-trailing-comma = false
 
+[tool.pyright]
+include = ["src/ynab_mcp"]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+
 [tool.coverage.run]
 branch = true
 omit = ["**/__init__.py", "tests/*"]
@@ -93,6 +98,7 @@ dev = [
   "freezegun>=1.5.5",
   "hypothesis>=6.151.9",
   "pre-commit>=4.5.1",
+  "pyright>=1.1.408",
   "pytest>=9.0.2",
   "pytest-clarity>=1.0.1",
   "pytest-cov>=7.0.0",

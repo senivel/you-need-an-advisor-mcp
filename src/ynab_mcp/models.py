@@ -1,11 +1,155 @@
-"""Pydantic models for YNAB API responses.
+"""Pydantic models and TypedDicts for YNAB API responses.
 
 Base models for validating and typing YNAB API response data.
 All models use ``extra="ignore"`` so that additional fields returned
 by the YNAB API do not cause validation errors.
+
+TypedDicts provide lightweight structural types for raw API response
+dicts where key-access patterns need type safety under pyright strict
+mode, without the overhead of Pydantic validation.
 """
 
+from typing import Any, TypedDict
+
 from pydantic import BaseModel, ConfigDict
+
+
+# ---------------------------------------------------------------------------
+# TypedDict definitions for raw API response shapes (used with dict access)
+# ---------------------------------------------------------------------------
+
+
+class AccountsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/accounts."""
+
+    accounts: list[dict[str, Any]]
+
+
+class AccountResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/accounts/{id}."""
+
+    account: dict[str, Any]
+
+
+class TransactionsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/transactions."""
+
+    transactions: list[dict[str, Any]]
+
+
+class TransactionResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/transactions/{id}."""
+
+    transaction: dict[str, Any]
+
+
+class CategoriesResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/categories."""
+
+    category_groups: list[dict[str, Any]]
+
+
+class CategoryResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/categories/{id}."""
+
+    category: dict[str, Any]
+
+
+class PayeesResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/payees."""
+
+    payees: list[dict[str, Any]]
+
+
+class PayeeResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/payees/{id}."""
+
+    payee: dict[str, Any]
+
+
+class PayeeLocationsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/payee_locations."""
+
+    payee_locations: list[dict[str, Any]]
+
+
+class PayeeLocationResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/payee_locations/{id}."""
+
+    payee_location: dict[str, Any]
+
+
+class MonthsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/months."""
+
+    months: list[dict[str, Any]]
+
+
+class MonthResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/months/{month}."""
+
+    month: dict[str, Any]
+
+
+class MoneyMovementsResponseData(TypedDict):
+    """Shape of ``data`` from GET .../money_movements."""
+
+    money_movements: list[dict[str, Any]]
+
+
+class MoneyMovementGroupsResponseData(TypedDict):
+    """Shape of ``data`` from GET .../money_movement_groups."""
+
+    money_movement_groups: list[dict[str, Any]]
+
+
+class ScheduledTransactionsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/scheduled_transactions."""
+
+    scheduled_transactions: list[dict[str, Any]]
+
+
+class ScheduledTransactionResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/scheduled_transactions/{id}."""
+
+    scheduled_transaction: dict[str, Any]
+
+
+class BudgetResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}."""
+
+    budget: dict[str, Any]
+
+
+class SettingsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets/{id}/settings."""
+
+    settings: dict[str, Any]
+
+
+class UserResponseData(TypedDict):
+    """Shape of ``data`` from GET /user."""
+
+    user: dict[str, Any]
+
+
+class BudgetsResponseData(TypedDict):
+    """Shape of ``data`` from GET /budgets."""
+
+    budgets: list[dict[str, Any]]
+
+
+class CategoryGroupResponseData(TypedDict):
+    """Shape of ``data`` from POST/PATCH category groups."""
+
+    category_group: dict[str, Any]
+
+
+class BatchTransactionResponseData(TypedDict, total=False):
+    """Shape of ``data`` from batch transaction create/update."""
+
+    transaction_ids: list[str]
+    duplicate_import_ids: list[str]
 
 
 class ErrorDetail(BaseModel):
