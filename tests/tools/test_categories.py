@@ -1,15 +1,9 @@
-"""Tests for category tools."""
+"""Tests for manage_categories consolidated tool."""
 
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.categories import (
-    get_categories,
-    get_category,
-    manage_category,
-    manage_category_group,
-    month_category_budget,
-)
+from ynab_mcp.tools.categories import manage_categories
 
 
 def _sample_category_groups():
@@ -114,8 +108,8 @@ def _sample_category_groups():
     }
 
 
-class TestGetCategories:
-    """Tests for get_categories tool."""
+class TestManageCategoriesList:
+    """Tests for manage_categories(action='list')."""
 
     @pytest.mark.anyio
     async def test_list_categories(self, mock_ctx, mocker):
@@ -126,20 +120,15 @@ class TestGetCategories:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
 
-        result = await get_categories(mock_ctx)
+        result = await manage_categories(mock_ctx, action="list")
 
-        # Count header (2 visible: Rent + Groceries, hidden Utilities excluded)
         assert "2 categories found:" in result
-        # Group headers
         assert "Fixed Expenses" in result
         assert "Flexible Spending" in result
-        # Category names indented
         assert "  - Rent" in result
         assert "  - Groceries" in result
-        # Dollar formatting
         assert "$1,500.00" in result
         assert "$500.00" in result
-        # IDs in output
         assert "ID: group-1" in result
         assert "ID: group-2" in result
         assert "ID: cat-1" in result
@@ -154,7 +143,7 @@ class TestGetCategories:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
 
-        result = await get_categories(mock_ctx)
+        result = await manage_categories(mock_ctx, action="list")
 
         assert "Utilities" not in result
 
@@ -167,7 +156,7 @@ class TestGetCategories:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
 
-        result = await get_categories(mock_ctx, include_hidden=True)
+        result = await manage_categories(mock_ctx, action="list", include_hidden=True)
 
         assert "Utilities" in result
         assert "3 categories found:" in result
@@ -181,7 +170,7 @@ class TestGetCategories:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
 
-        result = await get_categories(mock_ctx)
+        result = await manage_categories(mock_ctx, action="list")
 
         assert "Old Group" not in result
         assert "Old Category" not in result
@@ -195,13 +184,13 @@ class TestGetCategories:
         )
         mock_ctx.lifespan_context.client.get.return_value = {"category_groups": []}
 
-        result = await get_categories(mock_ctx)
+        result = await manage_categories(mock_ctx, action="list")
 
         assert result == "No categories found."
 
 
-class TestGetCategory:
-    """Tests for get_category tool."""
+class TestManageCategoriesGet:
+    """Tests for manage_categories(action='get')."""
 
     @pytest.mark.anyio
     async def test_get_category(self, mock_ctx, mocker):
@@ -233,7 +222,7 @@ class TestGetCategory:
             }
         }
 
-        result = await get_category(mock_ctx, category_id="cat-1")
+        result = await manage_categories(mock_ctx, action="get", category_id="cat-1")
 
         assert "Rent" in result
         assert "Fixed Expenses" in result
@@ -272,7 +261,7 @@ class TestGetCategory:
             }
         }
 
-        result = await get_category(mock_ctx, category_id="cat-3")
+        result = await manage_categories(mock_ctx, action="get", category_id="cat-3")
 
         assert "Goal" in result
         assert "Needed for Spending" in result
@@ -306,16 +295,27 @@ class TestGetCategory:
             }
         }
 
-        result = await get_category(mock_ctx, category_id="cat-1")
+        result = await manage_categories(mock_ctx, action="get", category_id="cat-1")
 
         assert "Goal" not in result
 
+    @pytest.mark.anyio
+    async def test_get_category_missing_id_raises(self, mock_ctx, mocker):
+        """ToolError raised when category_id missing for get action."""
+        mocker.patch(
+            "ynab_mcp.tools.categories.resolve_budget",
+            return_value=("budget-123", None),
+        )
 
-class TestManageCategory:
-    """Tests for manage_category tool."""
+        with pytest.raises(ToolError, match="category_id is required"):
+            await manage_categories(mock_ctx, action="get")
+
+
+class TestManageCategoriesCreate:
+    """Tests for manage_categories(action='create')."""
 
     @pytest.mark.anyio
-    async def test_manage_category_create(self, mock_ctx, mocker):
+    async def test_create_category(self, mock_ctx, mocker):
         """POST body correct, confirmation format."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -332,8 +332,11 @@ class TestManageCategory:
             }
         }
 
-        result = await manage_category(
-            mock_ctx, name="Subscriptions", category_group_id="group-1"
+        result = await manage_categories(
+            mock_ctx,
+            action="create",
+            name="Subscriptions",
+            category_group_id="group-1",
         )
 
         assert "Category created" in result
@@ -346,7 +349,7 @@ class TestManageCategory:
         assert body["category"]["category_group_id"] == "group-1"
 
     @pytest.mark.anyio
-    async def test_manage_category_create_with_goal(self, mock_ctx, mocker):
+    async def test_create_category_with_goal(self, mock_ctx, mocker):
         """goal_target converted to milliunits in POST body."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -362,15 +365,21 @@ class TestManageCategory:
             }
         }
 
-        result = await manage_category(mock_ctx, name="Savings", goal_target=500.0)
+        result = await manage_categories(
+            mock_ctx, action="create", name="Savings", goal_target=500.0
+        )
 
         assert "Category created" in result
         call_args = mock_ctx.lifespan_context.client.post.call_args
         body = call_args[1]["json"]
         assert body["category"]["goal_target"] == 500000
 
+
+class TestManageCategoriesUpdate:
+    """Tests for manage_categories(action='update')."""
+
     @pytest.mark.anyio
-    async def test_manage_category_update(self, mock_ctx, mocker):
+    async def test_update_category(self, mock_ctx, mocker):
         """PATCH body only includes provided fields, category_id in path."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -386,8 +395,8 @@ class TestManageCategory:
             }
         }
 
-        result = await manage_category(
-            mock_ctx, name="Rent Updated", category_id="cat-1"
+        result = await manage_categories(
+            mock_ctx, action="update", name="Rent Updated", category_id="cat-1"
         )
 
         assert "Category updated" in result
@@ -396,12 +405,11 @@ class TestManageCategory:
         assert call_args[0][0] == "/budgets/budget-123/categories/cat-1"
         body = call_args[1]["json"]
         assert body["category"]["name"] == "Rent Updated"
-        # note and goal_target should not be in body (not provided)
         assert "note" not in body["category"]
         assert "goal_target" not in body["category"]
 
     @pytest.mark.anyio
-    async def test_manage_category_update_goal_conversion(self, mock_ctx, mocker):
+    async def test_update_category_goal_conversion(self, mock_ctx, mocker):
         """goal_target converted from dollars to milliunits in PATCH."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -417,8 +425,12 @@ class TestManageCategory:
             }
         }
 
-        await manage_category(
-            mock_ctx, name="Savings", category_id="cat-1", goal_target=250.50
+        await manage_categories(
+            mock_ctx,
+            action="update",
+            category_id="cat-1",
+            name="Savings",
+            goal_target=250.50,
         )
 
         call_args = mock_ctx.lifespan_context.client.patch.call_args
@@ -426,11 +438,11 @@ class TestManageCategory:
         assert body["category"]["goal_target"] == 250500
 
 
-class TestManageCategoryGroup:
-    """Tests for manage_category_group tool."""
+class TestManageCategoriesGroup:
+    """Tests for manage_categories(action='create_group'|'update_group')."""
 
     @pytest.mark.anyio
-    async def test_manage_category_group_create(self, mock_ctx, mocker):
+    async def test_create_group(self, mock_ctx, mocker):
         """POST body correct, confirmation format."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -443,7 +455,9 @@ class TestManageCategoryGroup:
             }
         }
 
-        result = await manage_category_group(mock_ctx, name="Investments")
+        result = await manage_categories(
+            mock_ctx, action="create_group", name="Investments"
+        )
 
         assert "Category group created" in result
         assert "Investments" in result
@@ -453,7 +467,7 @@ class TestManageCategoryGroup:
         assert body["category_group"]["name"] == "Investments"
 
     @pytest.mark.anyio
-    async def test_manage_category_group_create_name_too_long(self, mock_ctx, mocker):
+    async def test_create_group_name_too_long(self, mock_ctx, mocker):
         """ToolError raised for name > 50 chars."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -461,10 +475,10 @@ class TestManageCategoryGroup:
         )
 
         with pytest.raises(ToolError, match="50 characters"):
-            await manage_category_group(mock_ctx, name="A" * 51)
+            await manage_categories(mock_ctx, action="create_group", name="A" * 51)
 
     @pytest.mark.anyio
-    async def test_manage_category_group_update(self, mock_ctx, mocker):
+    async def test_update_group(self, mock_ctx, mocker):
         """PATCH body correct, confirmation, category_group_id in path."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -477,8 +491,11 @@ class TestManageCategoryGroup:
             }
         }
 
-        result = await manage_category_group(
-            mock_ctx, name="Fixed Costs", category_group_id="group-1"
+        result = await manage_categories(
+            mock_ctx,
+            action="update_group",
+            name="Fixed Costs",
+            category_group_id="group-1",
         )
 
         assert "Category group updated" in result
@@ -513,11 +530,11 @@ def _sample_month_category():
     }
 
 
-class TestMonthCategoryBudget:
-    """Tests for month_category_budget tool."""
+class TestManageCategoriesSetMonthBudget:
+    """Tests for manage_categories(action='set_month_budget')."""
 
     @pytest.mark.anyio
-    async def test_month_category_budget_get(self, mock_ctx, mocker):
+    async def test_get_month_budget(self, mock_ctx, mocker):
         """Correct API path with normalized month, structured output."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -525,8 +542,11 @@ class TestMonthCategoryBudget:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
 
-        result = await month_category_budget(
-            mock_ctx, category_id="cat-1", month="2026-03-01"
+        result = await manage_categories(
+            mock_ctx,
+            action="set_month_budget",
+            category_id="cat-1",
+            month="2026-03-01",
         )
 
         assert "Rent" in result
@@ -538,7 +558,7 @@ class TestMonthCategoryBudget:
         )
 
     @pytest.mark.anyio
-    async def test_month_category_budget_get_default_month(self, mock_ctx, mocker):
+    async def test_get_month_budget_default_month(self, mock_ctx, mocker):
         """None month sends 'current' to API."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -546,13 +566,15 @@ class TestMonthCategoryBudget:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
 
-        await month_category_budget(mock_ctx, category_id="cat-1")
+        await manage_categories(
+            mock_ctx, action="set_month_budget", category_id="cat-1"
+        )
 
         call_args = mock_ctx.lifespan_context.client.get.call_args
         assert "/months/current/" in call_args[0][0]
 
     @pytest.mark.anyio
-    async def test_month_category_budget_get_normalizes_month(self, mock_ctx, mocker):
+    async def test_get_month_budget_normalizes(self, mock_ctx, mocker):
         """'2026-03' becomes '2026-03-01' in API path."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -560,13 +582,18 @@ class TestMonthCategoryBudget:
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
 
-        await month_category_budget(mock_ctx, category_id="cat-1", month="2026-03")
+        await manage_categories(
+            mock_ctx,
+            action="set_month_budget",
+            category_id="cat-1",
+            month="2026-03",
+        )
 
         call_args = mock_ctx.lifespan_context.client.get.call_args
         assert "/months/2026-03-01/" in call_args[0][0]
 
     @pytest.mark.anyio
-    async def test_month_category_budget_update(self, mock_ctx, mocker):
+    async def test_set_month_budget(self, mock_ctx, mocker):
         """Budgeted converted to milliunits, correct PATCH body."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -580,8 +607,12 @@ class TestMonthCategoryBudget:
             }
         }
 
-        result = await month_category_budget(
-            mock_ctx, category_id="cat-1", month="2026-03", budgeted=1600.0
+        result = await manage_categories(
+            mock_ctx,
+            action="set_month_budget",
+            category_id="cat-1",
+            month="2026-03",
+            budgeted=1600.0,
         )
 
         assert "Category budget updated" in result
@@ -593,7 +624,7 @@ class TestMonthCategoryBudget:
         assert body["category"]["budgeted"] == 1600000
 
     @pytest.mark.anyio
-    async def test_month_category_budget_update_default_month(self, mock_ctx, mocker):
+    async def test_set_month_budget_default_month(self, mock_ctx, mocker):
         """None month defaults to 'current' for update."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -607,13 +638,18 @@ class TestMonthCategoryBudget:
             }
         }
 
-        await month_category_budget(mock_ctx, category_id="cat-1", budgeted=1500.0)
+        await manage_categories(
+            mock_ctx,
+            action="set_month_budget",
+            category_id="cat-1",
+            budgeted=1500.0,
+        )
 
         call_args = mock_ctx.lifespan_context.client.patch.call_args
         assert "/months/current/" in call_args[0][0]
 
     @pytest.mark.anyio
-    async def test_month_category_budget_update_confirmation(self, mock_ctx, mocker):
+    async def test_set_month_budget_confirmation(self, mock_ctx, mocker):
         """Response includes formatted dollar amount."""
         mocker.patch(
             "ynab_mcp.tools.categories.resolve_budget",
@@ -627,8 +663,12 @@ class TestMonthCategoryBudget:
             }
         }
 
-        result = await month_category_budget(
-            mock_ctx, category_id="cat-1", month="2026-03", budgeted=1600.0
+        result = await manage_categories(
+            mock_ctx,
+            action="set_month_budget",
+            category_id="cat-1",
+            month="2026-03",
+            budgeted=1600.0,
         )
 
         assert "$1,600.00" in result

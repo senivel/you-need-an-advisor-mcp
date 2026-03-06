@@ -63,7 +63,11 @@ async def _list_categories(
     *,
     include_hidden: bool = False,
 ) -> str:
-    """List all categories grouped by category group."""
+    """List all categories grouped by category group.
+
+    Returns:
+        Structured text with count header and indented hierarchy.
+    """
     data = await app.client.get(f"/budgets/{budget_id}/categories")
     groups = data["category_groups"]
     lines: list[str] = []
@@ -110,7 +114,11 @@ async def _get_category(
     *,
     category_id: str,
 ) -> str:
-    """Get detailed information about a specific category."""
+    """Get detailed information about a specific category.
+
+    Returns:
+        Structured text with full category details.
+    """
     data = await app.client.get(f"/budgets/{budget_id}/categories/{category_id}")
     cat = data["category"]
     lines = [f"Category: {cat['name']}"]
@@ -140,7 +148,11 @@ async def _create_category(  # noqa: PLR0913
     goal_target: float | None = None,
     goal_target_date: str | None = None,
 ) -> str:
-    """Create a new category."""
+    """Create a new category.
+
+    Returns:
+        Confirmation text with created category details.
+    """
     body: dict = {"name": name}
     if category_group_id is not None:
         body["category_group_id"] = category_group_id
@@ -168,7 +180,11 @@ async def _update_category(  # noqa: PLR0913
     goal_target: float | None = None,
     goal_target_date: str | None = None,
 ) -> str:
-    """Update an existing category."""
+    """Update an existing category.
+
+    Returns:
+        Confirmation text with updated category details.
+    """
     body: dict = {}
     if name is not None:
         body["name"] = name
@@ -192,7 +208,14 @@ async def _create_group(
     *,
     name: str,
 ) -> str:
-    """Create a new category group."""
+    """Create a new category group.
+
+    Returns:
+        Confirmation text with created group details.
+
+    Raises:
+        ToolError: If name exceeds 50 characters.
+    """
     if len(name) > _MAX_GROUP_NAME_LENGTH:
         msg = (
             f"Category group name must be {_MAX_GROUP_NAME_LENGTH} "
@@ -214,7 +237,14 @@ async def _update_group(
     category_group_id: str,
     name: str,
 ) -> str:
-    """Update an existing category group."""
+    """Update an existing category group.
+
+    Returns:
+        Confirmation text with updated group details.
+
+    Raises:
+        ToolError: If name exceeds 50 characters.
+    """
     if len(name) > _MAX_GROUP_NAME_LENGTH:
         msg = (
             f"Category group name must be {_MAX_GROUP_NAME_LENGTH} "
@@ -237,7 +267,11 @@ async def _set_month_budget(
     month: str | None = None,
     budgeted: float | None = None,
 ) -> str:
-    """Get or update the budgeted amount for a category in a specific month."""
+    """Get or update the budgeted amount for a category in a specific month.
+
+    Returns:
+        Structured text with category budget details or confirmation.
+    """
     normalized = normalize_month(month)
     path = f"/budgets/{budget_id}/months/{normalized}/categories/{category_id}"
     if budgeted is None:
@@ -267,7 +301,7 @@ async def _set_month_budget(
 
 
 @mcp.tool
-async def manage_categories(  # noqa: PLR0913, PLR0917
+async def manage_categories(  # noqa: PLR0913, PLR0917, C901, PLR0911
     ctx: Context,
     action: Literal[
         "list",

@@ -1,14 +1,9 @@
-"""Tests for payee tools: list, get, update, and payee location tools."""
+"""Tests for manage_payees consolidated tool."""
 
 import pytest
+from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.payees import (
-    get_payee,
-    get_payee_location,
-    list_payee_locations,
-    list_payees,
-    update_payee_name,
-)
+from ynab_mcp.tools.payees import manage_payees
 
 
 def _make_payee(
@@ -18,11 +13,7 @@ def _make_payee(
     transfer_account_id=None,
     deleted=False,
 ):
-    """Build a sample payee dict matching YNAB API shape.
-
-    Returns:
-        Dict with payee fields.
-    """
+    """Build a sample payee dict matching YNAB API shape."""
     return {
         "id": payee_id,
         "name": name,
@@ -39,11 +30,7 @@ def _make_payee_location(
     longitude=-74.0060,
     deleted=False,
 ):
-    """Build a sample payee location dict matching YNAB API shape.
-
-    Returns:
-        Dict with payee location fields.
-    """
+    """Build a sample payee location dict matching YNAB API shape."""
     return {
         "id": loc_id,
         "payee_id": payee_id,
@@ -53,8 +40,8 @@ def _make_payee_location(
     }
 
 
-class TestListPayees:
-    """Tests for list_payees tool (PAYE-01)."""
+class TestManagePayeesList:
+    """Tests for manage_payees(action='list')."""
 
     @pytest.mark.anyio
     async def test_returns_payees_with_count_header(self, mock_ctx, mocker):
@@ -68,7 +55,7 @@ class TestListPayees:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"payees": payees}
 
-        result = await list_payees(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list")
 
         assert "2 payees found:" in result
         assert "Grocery Store" in result
@@ -88,7 +75,7 @@ class TestListPayees:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"payees": payees}
 
-        result = await list_payees(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list")
 
         assert "1 payee found:" in result
         assert "Active" in result
@@ -110,7 +97,7 @@ class TestListPayees:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"payees": payees}
 
-        result = await list_payees(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list")
 
         assert "1 payee found:" in result
         assert "Regular Payee" in result
@@ -132,7 +119,7 @@ class TestListPayees:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"payees": payees}
 
-        result = await list_payees(mock_ctx, include_transfers=True)
+        result = await manage_payees(mock_ctx, action="list", include_transfers=True)
 
         assert "2 payees found:" in result
         assert "Regular Payee" in result
@@ -146,13 +133,13 @@ class TestListPayees:
         )
         mock_ctx.lifespan_context.client.get.return_value = {"payees": []}
 
-        result = await list_payees(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list")
 
         assert result == "No payees found."
 
 
-class TestGetPayee:
-    """Tests for get_payee tool (PAYE-02)."""
+class TestManagePayeesGet:
+    """Tests for manage_payees(action='get')."""
 
     @pytest.mark.anyio
     async def test_returns_payee_detail(self, mock_ctx, mocker):
@@ -163,7 +150,7 @@ class TestGetPayee:
         payee = _make_payee(payee_id="p1", name="Grocery Store")
         mock_ctx.lifespan_context.client.get.return_value = {"payee": payee}
 
-        result = await get_payee(mock_ctx, payee_id="p1")
+        result = await manage_payees(mock_ctx, action="get", payee_id="p1")
 
         assert "Grocery Store" in result
         assert "p1" in result
@@ -181,13 +168,24 @@ class TestGetPayee:
         )
         mock_ctx.lifespan_context.client.get.return_value = {"payee": payee}
 
-        result = await get_payee(mock_ctx, payee_id="p1")
+        result = await manage_payees(mock_ctx, action="get", payee_id="p1")
 
         assert "Transfer account: acct-999" in result
 
+    @pytest.mark.anyio
+    async def test_get_missing_id_raises(self, mock_ctx, mocker):
+        """ToolError raised when payee_id is missing for get action."""
+        mocker.patch(
+            "ynab_mcp.tools.payees.resolve_budget",
+            return_value=("budget-1", {}),
+        )
 
-class TestUpdatePayeeName:
-    """Tests for update_payee_name tool (PAYE-03)."""
+        with pytest.raises(ToolError, match="payee_id is required"):
+            await manage_payees(mock_ctx, action="get")
+
+
+class TestManagePayeesUpdateName:
+    """Tests for manage_payees(action='update_name')."""
 
     @pytest.mark.anyio
     async def test_renames_payee(self, mock_ctx, mocker):
@@ -199,7 +197,9 @@ class TestUpdatePayeeName:
             "payee": _make_payee(payee_id="p1", name="New Name"),
         }
 
-        result = await update_payee_name(mock_ctx, payee_id="p1", name="New Name")
+        result = await manage_payees(
+            mock_ctx, action="update_name", payee_id="p1", name="New Name"
+        )
 
         assert "Payee renamed" in result
         assert "New Name" in result
@@ -207,8 +207,8 @@ class TestUpdatePayeeName:
         mock_ctx.lifespan_context.client.patch.assert_called_once()
 
 
-class TestListPayeeLocations:
-    """Tests for list_payee_locations tool (PAYE-04, PAYE-06)."""
+class TestManagePayeesListLocations:
+    """Tests for manage_payees(action='list_locations')."""
 
     @pytest.mark.anyio
     async def test_returns_all_locations(self, mock_ctx, mocker):
@@ -224,7 +224,7 @@ class TestListPayeeLocations:
             "payee_locations": locations,
         }
 
-        result = await list_payee_locations(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list_locations")
 
         assert "2 payee locations found:" in result
         assert "loc-1" in result
@@ -244,10 +244,9 @@ class TestListPayeeLocations:
             "payee_locations": locations,
         }
 
-        result = await list_payee_locations(mock_ctx, payee_id="p1")
+        result = await manage_payees(mock_ctx, action="list_locations", payee_id="p1")
 
         assert "1 payee location found:" in result
-        # Verify correct endpoint used
         mock_ctx.lifespan_context.client.get.assert_called_once()
         call_args = mock_ctx.lifespan_context.client.get.call_args
         assert "payees/p1/payee_locations" in call_args[0][0]
@@ -266,7 +265,7 @@ class TestListPayeeLocations:
             "payee_locations": locations,
         }
 
-        result = await list_payee_locations(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list_locations")
 
         assert "1 payee location found:" in result
         assert "loc-1" in result
@@ -282,13 +281,13 @@ class TestListPayeeLocations:
             "payee_locations": [],
         }
 
-        result = await list_payee_locations(mock_ctx)
+        result = await manage_payees(mock_ctx, action="list_locations")
 
         assert result == "No payee locations found."
 
 
-class TestGetPayeeLocation:
-    """Tests for get_payee_location tool (PAYE-05)."""
+class TestManagePayeesGetLocation:
+    """Tests for manage_payees(action='get_location')."""
 
     @pytest.mark.anyio
     async def test_returns_location_detail(self, mock_ctx, mocker):
@@ -306,9 +305,22 @@ class TestGetPayeeLocation:
             "payee_location": location,
         }
 
-        result = await get_payee_location(mock_ctx, payee_location_id="loc-1")
+        result = await manage_payees(
+            mock_ctx, action="get_location", payee_location_id="loc-1"
+        )
 
         assert "loc-1" in result
         assert "p1" in result
         assert "40.7128" in result
         assert "-74.006" in result
+
+    @pytest.mark.anyio
+    async def test_get_location_missing_id_raises(self, mock_ctx, mocker):
+        """ToolError raised when payee_location_id is missing."""
+        mocker.patch(
+            "ynab_mcp.tools.payees.resolve_budget",
+            return_value=("budget-1", {}),
+        )
+
+        with pytest.raises(ToolError, match="payee_location_id is required"):
+            await manage_payees(mock_ctx, action="get_location")
