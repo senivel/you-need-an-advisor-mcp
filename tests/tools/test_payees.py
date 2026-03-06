@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.payees import manage_payees
+from ynaa_mcp.tools.payees import manage_payees
 
 
 def _make_payee(
@@ -46,7 +46,7 @@ class TestManagePayeesList:
     @pytest.mark.anyio
     async def test_returns_payees_with_count_header(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payees = [
@@ -66,7 +66,7 @@ class TestManagePayeesList:
     @pytest.mark.anyio
     async def test_excludes_deleted_payees(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payees = [
@@ -84,7 +84,7 @@ class TestManagePayeesList:
     @pytest.mark.anyio
     async def test_excludes_transfers_by_default(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payees = [
@@ -106,7 +106,7 @@ class TestManagePayeesList:
     @pytest.mark.anyio
     async def test_includes_transfers_when_requested(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payees = [
@@ -128,7 +128,7 @@ class TestManagePayeesList:
     @pytest.mark.anyio
     async def test_empty_returns_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.get.return_value = {"payees": []}
@@ -144,7 +144,7 @@ class TestManagePayeesGet:
     @pytest.mark.anyio
     async def test_returns_payee_detail(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payee = _make_payee(payee_id="p1", name="Grocery Store")
@@ -158,7 +158,7 @@ class TestManagePayeesGet:
     @pytest.mark.anyio
     async def test_shows_transfer_info(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         payee = _make_payee(
@@ -176,7 +176,7 @@ class TestManagePayeesGet:
     async def test_get_missing_id_raises(self, mock_ctx, mocker):
         """ToolError raised when payee_id is missing for get action."""
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
 
@@ -190,7 +190,7 @@ class TestManagePayeesUpdateName:
     @pytest.mark.anyio
     async def test_renames_payee(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -213,7 +213,7 @@ class TestManagePayeesListLocations:
     @pytest.mark.anyio
     async def test_returns_all_locations(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         locations = [
@@ -234,7 +234,7 @@ class TestManagePayeesListLocations:
     @pytest.mark.anyio
     async def test_filters_by_payee_id(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         locations = [
@@ -254,7 +254,7 @@ class TestManagePayeesListLocations:
     @pytest.mark.anyio
     async def test_excludes_deleted_locations(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         locations = [
@@ -274,7 +274,7 @@ class TestManagePayeesListLocations:
     @pytest.mark.anyio
     async def test_empty_returns_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -292,7 +292,7 @@ class TestManagePayeesGetLocation:
     @pytest.mark.anyio
     async def test_returns_location_detail(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
         location = _make_payee_location(
@@ -318,7 +318,7 @@ class TestManagePayeesGetLocation:
     async def test_get_location_missing_id_raises(self, mock_ctx, mocker):
         """ToolError raised when payee_location_id is missing."""
         mocker.patch(
-            "ynab_mcp.tools.payees.resolve_budget",
+            "ynaa_mcp.tools.payees.resolve_budget",
             return_value=("budget-1", {}),
         )
 

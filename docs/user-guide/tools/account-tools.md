@@ -57,7 +57,7 @@ In YNAB, accounts fall into two categories: **on-budget** accounts (checking, sa
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.accounts.manage_accounts
+::: ynaa_mcp.tools.accounts.manage_accounts
     options:
       show_root_heading: true
       show_source: true

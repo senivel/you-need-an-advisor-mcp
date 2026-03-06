@@ -7,7 +7,7 @@ Auto-generated API reference for MCP prompt functions. Prompts are organized int
 ## Core Prompts
 
 <!-- prettier-ignore -->
-::: ynab_mcp.prompts
+::: ynaa_mcp.prompts
     options:
       show_root_heading: true
       show_source: true
@@ -17,7 +17,7 @@ Auto-generated API reference for MCP prompt functions. Prompts are organized int
 ## Analysis Prompts
 
 <!-- prettier-ignore -->
-::: ynab_mcp.analysis
+::: ynaa_mcp.analysis
     options:
       show_root_heading: true
       show_source: true
@@ -27,7 +27,7 @@ Auto-generated API reference for MCP prompt functions. Prompts are organized int
 ## Workflow Guides
 
 <!-- prettier-ignore -->
-::: ynab_mcp.workflows
+::: ynaa_mcp.workflows
     options:
       show_root_heading: true
       show_source: true

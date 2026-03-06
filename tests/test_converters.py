@@ -4,13 +4,13 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from ynab_mcp.converters import (
+from ynaa_mcp.converters import (
     dollars_to_milliunits,
     format_dollars,
     milliunits_to_dollars,
     normalize_month,
 )
-from ynab_mcp.models import BudgetsResponse, BudgetSummary, ErrorDetail, ErrorResponse
+from ynaa_mcp.models import BudgetsResponse, BudgetSummary, ErrorDetail, ErrorResponse
 
 
 class TestMilliunitsToDollars:

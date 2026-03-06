@@ -1,6 +1,6 @@
 """Tests for YNAB error handling and formatting."""
 
-from ynab_mcp.errors import YNABAPIError, format_error
+from ynaa_mcp.errors import YNABAPIError, format_error
 
 
 class TestYNABAPIError:

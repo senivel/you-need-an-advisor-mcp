@@ -1867,7 +1867,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ynab-mcp"
+name = "you-need-an-advisor-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

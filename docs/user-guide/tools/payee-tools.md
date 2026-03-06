@@ -56,7 +56,7 @@ YNAB automatically creates payees from imported transactions, which can lead to 
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.payees.manage_payees
+::: ynaa_mcp.tools.payees.manage_payees
     options:
       show_root_heading: true
       show_source: true

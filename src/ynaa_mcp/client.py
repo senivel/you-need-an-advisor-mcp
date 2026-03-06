@@ -18,10 +18,10 @@ from typing import Any, cast
 import httpx
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.cache import CacheStore, cache_key_from_path, strip_server_knowledge
-from ynab_mcp.converters import milliunits_to_dollars
-from ynab_mcp.errors import YNABAPIError
-from ynab_mcp.rate_limiter import RateLimiter
+from ynaa_mcp.cache import CacheStore, cache_key_from_path, strip_server_knowledge
+from ynaa_mcp.converters import milliunits_to_dollars
+from ynaa_mcp.errors import YNABAPIError
+from ynaa_mcp.rate_limiter import RateLimiter
 
 
 logger = logging.getLogger(__name__)

@@ -14,7 +14,7 @@ The async HTTP client handles all communication with the YNAB API. Every request
 ---
 
 <!-- prettier-ignore -->
-::: ynab_mcp.client
+::: ynaa_mcp.client
     options:
       show_root_heading: true
       show_source: true

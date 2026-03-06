@@ -4,7 +4,7 @@ from typing import cast
 
 from fastmcp import Context
 
-from ynab_mcp.app import AppContext, mcp
+from ynaa_mcp.app import AppContext, mcp
 
 
 @mcp.tool

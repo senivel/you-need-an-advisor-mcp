@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from ynab_mcp.resources import budget_accounts, budget_categories, budget_payees
+from ynaa_mcp.resources import budget_accounts, budget_categories, budget_payees
 
 
 @pytest.fixture

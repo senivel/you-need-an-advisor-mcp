@@ -9,7 +9,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Budgets
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.budgets
+::: ynaa_mcp.tools.budgets
     options:
       show_root_heading: true
       show_source: true
@@ -19,7 +19,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Accounts
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.accounts
+::: ynaa_mcp.tools.accounts
     options:
       show_root_heading: true
       show_source: true
@@ -29,7 +29,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Categories
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.categories
+::: ynaa_mcp.tools.categories
     options:
       show_root_heading: true
       show_source: true
@@ -39,7 +39,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Transactions
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.transactions
+::: ynaa_mcp.tools.transactions
     options:
       show_root_heading: true
       show_source: true
@@ -49,7 +49,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Payees
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.payees
+::: ynaa_mcp.tools.payees
     options:
       show_root_heading: true
       show_source: true
@@ -59,7 +59,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Months
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.months
+::: ynaa_mcp.tools.months
     options:
       show_root_heading: true
       show_source: true
@@ -69,7 +69,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Scheduled Transactions
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.scheduled
+::: ynaa_mcp.tools.scheduled
     options:
       show_root_heading: true
       show_source: true
@@ -79,7 +79,7 @@ All tools use an action-based dispatch pattern: a single entry function accepts 
 ## Cache
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.cache
+::: ynaa_mcp.tools.cache
     options:
       show_root_heading: true
       show_source: true

@@ -9,7 +9,7 @@ Auto-generated API reference for MCP resource functions. Resources are split bet
 Static YNAB methodology content loaded from markdown files at import time.
 
 <!-- prettier-ignore -->
-::: ynab_mcp.knowledge
+::: ynaa_mcp.knowledge
     options:
       show_root_heading: true
       show_source: true
@@ -21,7 +21,7 @@ Static YNAB methodology content loaded from markdown files at import time.
 Dynamic resources that fetch live data from the YNAB API for a specific budget.
 
 <!-- prettier-ignore -->
-::: ynab_mcp.resources
+::: ynaa_mcp.resources
     options:
       show_root_heading: true
       show_source: true

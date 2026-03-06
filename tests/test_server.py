@@ -5,8 +5,8 @@ import inspect
 
 import pytest
 
-from ynab_mcp.app import AppContext, lifespan
-from ynab_mcp.client import YNABClient
+from ynaa_mcp.app import AppContext, lifespan
+from ynaa_mcp.client import YNABClient
 
 
 class TestLifespanStartup:
@@ -27,7 +27,7 @@ class TestLifespanStartup:
         """Invalid PAT (validate_token fails) causes startup failure."""
         monkeypatch.setenv("YNAB_PAT", "invalid-token")
 
-        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynaa_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -49,7 +49,7 @@ class TestLifespanStartup:
         """Valid PAT allows lifespan to complete and yield AppContext."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
 
-        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynaa_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -70,7 +70,7 @@ class TestLifespanStartup:
         """AppContext.client is a YNABClient instance."""
         monkeypatch.setenv("YNAB_PAT", "valid-token-123")
 
-        mock_http_cls = mocker.patch("ynab_mcp.app.httpx.AsyncClient")
+        mock_http_cls = mocker.patch("ynaa_mcp.app.httpx.AsyncClient")
         mock_http_instance = mocker.AsyncMock()
         mock_http_cls.return_value.__aenter__ = mocker.AsyncMock(
             return_value=mock_http_instance,
@@ -93,7 +93,7 @@ class TestServerCompliance:
     def test_no_print_calls_in_server_source(self):
         """server.py must not use print() (stdout is MCP transport)."""
         source = inspect.getsource(
-            __import__("ynab_mcp.server", fromlist=["server"]),
+            __import__("ynaa_mcp.server", fromlist=["server"]),
         )
         tree = ast.parse(source)
         print_calls = [
@@ -108,7 +108,7 @@ class TestServerCompliance:
     def test_logging_configured_to_stderr(self):
         """Logging basicConfig uses stderr, not stdout (in app.py)."""
         source = inspect.getsource(
-            __import__("ynab_mcp.app", fromlist=["app"]),
+            __import__("ynaa_mcp.app", fromlist=["app"]),
         )
         # Verify logging is configured to stderr in source
         assert "stream=sys.stderr" in source, "app.py must configure logging to stderr"

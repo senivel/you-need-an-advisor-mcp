@@ -3,8 +3,8 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.budget_resolver import resolve_budget
-from ynab_mcp.cache import CacheStore
+from ynaa_mcp.budget_resolver import resolve_budget
+from ynaa_mcp.cache import CacheStore
 
 
 def _make_budget(budget_id, name):
@@ -119,7 +119,7 @@ class TestBudgetCacheIntegration:
     @pytest.mark.anyio
     async def test_cached_budget_list_avoids_api_call(self, mocker):
         """Second resolve_budget call uses cache, no API hit."""
-        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time = mocker.patch("ynaa_mcp.cache.time")
         mock_time.monotonic.return_value = 1000.0
 
         client = _mock_client(mocker, [BUDGET_A])
@@ -139,7 +139,7 @@ class TestBudgetCacheIntegration:
     @pytest.mark.anyio
     async def test_expired_cache_fetches_from_api(self, mocker):
         """resolve_budget fetches from API when TTL expired."""
-        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time = mocker.patch("ynaa_mcp.cache.time")
         mock_time.monotonic.return_value = 1000.0
 
         client = _mock_client(mocker, [BUDGET_A])

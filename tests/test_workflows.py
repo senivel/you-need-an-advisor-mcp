@@ -2,8 +2,8 @@
 
 import pytest
 
-import ynab_mcp.workflows as workflows_module
-from ynab_mcp.workflows import (
+import ynaa_mcp.workflows as workflows_module
+from ynaa_mcp.workflows import (
     breaking_paycheck_to_paycheck,
     couples_budgeting,
     emergency_fund,

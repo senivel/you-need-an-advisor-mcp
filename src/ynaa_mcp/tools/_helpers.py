@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from fastmcp import Context
 
-    from ynab_mcp.app import AppContext
-    from ynab_mcp.cache import CacheStore
-    from ynab_mcp.client import YNABClient
+    from ynaa_mcp.app import AppContext
+    from ynaa_mcp.cache import CacheStore
+    from ynaa_mcp.client import YNABClient
 
 
 def get_app(ctx: Context) -> AppContext:

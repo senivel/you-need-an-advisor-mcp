@@ -2,7 +2,7 @@
 
 import pytest
 
-from ynab_mcp.knowledge import (
+from ynaa_mcp.knowledge import (
     CREDIT_CARDS_CONTENT,
     GOALS_CONTENT,
     OVERSPENDING_CONTENT,

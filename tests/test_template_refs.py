@@ -8,8 +8,8 @@ import asyncio
 import importlib.resources
 import re
 
-import ynab_mcp.server  # noqa: F401  # Side-effect: registers all MCP handlers
-from ynab_mcp.app import mcp
+import ynaa_mcp.server  # noqa: F401  # Side-effect: registers all MCP handlers
+from ynaa_mcp.app import mcp
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +61,7 @@ def _load_all_template_files() -> dict[str, str]:
     """
     templates: dict[str, str] = {}
     for subpackage in ("prompts", "analysis", "workflows"):
-        pkg = importlib.resources.files(f"ynab_mcp.templates.{subpackage}")
+        pkg = importlib.resources.files(f"ynaa_mcp.templates.{subpackage}")
         for item in pkg.iterdir():
             if hasattr(item, "name") and item.name.endswith(".md"):
                 templates[f"{subpackage}/{item.name}"] = item.read_text(

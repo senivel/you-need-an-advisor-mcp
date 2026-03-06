@@ -5,7 +5,7 @@ Error types for YNAB API errors and validation failures. Error messages differen
 ---
 
 <!-- prettier-ignore -->
-::: ynab_mcp.errors
+::: ynaa_mcp.errors
     options:
       show_root_heading: true
       show_source: true

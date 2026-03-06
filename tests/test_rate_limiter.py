@@ -1,6 +1,6 @@
 """Tests for the sliding window rate limiter."""
 
-from ynab_mcp.rate_limiter import RateLimiter
+from ynaa_mcp.rate_limiter import RateLimiter
 
 
 class TestRateLimiterCheck:
@@ -20,7 +20,7 @@ class TestRateLimiterCheck:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = base_time
         for _ in range(190):
             limiter.record()
@@ -38,7 +38,7 @@ class TestRateLimiterCheck:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = base_time
         for _ in range(189):
             limiter.record()
@@ -55,7 +55,7 @@ class TestRateLimiterCheck:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = base_time
         for _ in range(190):
             limiter.record()
@@ -75,7 +75,7 @@ class TestRateLimiterCheck:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = base_time
         for _ in range(190):
             limiter.record()
@@ -93,7 +93,7 @@ class TestRateLimiterCheck:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         # Record 50 requests at base_time
         mock_time.monotonic.return_value = base_time
         for _ in range(50):
@@ -120,7 +120,7 @@ class TestRateLimiterRecord:
         """record() adds a timestamp to the tracking deque."""
         limiter = RateLimiter()
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = 42.0
         limiter.record()
 
@@ -138,7 +138,7 @@ class TestRateLimiterCurrentCount:
         limiter = RateLimiter()
         base_time = 1000.0
 
-        mock_time = mocker.patch("ynab_mcp.rate_limiter.time")
+        mock_time = mocker.patch("ynaa_mcp.rate_limiter.time")
         mock_time.monotonic.return_value = base_time
         for _ in range(25):
             limiter.record()

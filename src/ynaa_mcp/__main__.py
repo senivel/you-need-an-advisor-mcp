@@ -1,6 +1,6 @@
-"""Entry point for ``python -m ynab_mcp`` and ``uvx ynab-mcp``."""
+"""Entry point for ``python -m ynaa_mcp`` and ``uvx ynab-mcp``."""
 
-from ynab_mcp.server import mcp
+from ynaa_mcp.server import mcp
 
 
 def main() -> None:

@@ -1,6 +1,6 @@
 """Tests for Account, Category, CategoryGroup, Transaction models."""
 
-from ynab_mcp.models import (
+from ynaa_mcp.models import (
     Account,
     Category,
     CategoryGroup,

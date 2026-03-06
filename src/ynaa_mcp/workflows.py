@@ -10,11 +10,11 @@ subpackage via importlib.resources.
 
 from importlib import resources as pkg_resources
 
-from ynab_mcp.app import mcp
-from ynab_mcp.prompts import _resolve_step
+from ynaa_mcp.app import mcp
+from ynaa_mcp.prompts import _resolve_step
 
 
-_templates = pkg_resources.files("ynab_mcp.templates.workflows")
+_templates = pkg_resources.files("ynaa_mcp.templates.workflows")
 
 GETTING_STARTED_TEMPLATE = _templates.joinpath(
     "getting-started.md",

@@ -12,12 +12,12 @@ from typing import TYPE_CHECKING
 
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.models import BudgetsResponse, BudgetSummary
+from ynaa_mcp.models import BudgetsResponse, BudgetSummary
 
 
 if TYPE_CHECKING:
-    from ynab_mcp.cache import CacheStore
-    from ynab_mcp.client import YNABClient
+    from ynaa_mcp.cache import CacheStore
+    from ynaa_mcp.client import YNABClient
 
 
 _FUZZY_MATCH_THRESHOLD = 0.6

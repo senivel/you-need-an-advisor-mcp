@@ -7,8 +7,8 @@ Thanks for your interest in contributing to YNAB MCP! This guide covers everythi
 **1. Clone the repository:**
 
 ```bash
-git clone https://github.com/senivel/ynab-mcp.git
-cd ynab-mcp
+git clone https://github.com/senivel/you-need-an-advisor-mcp.git
+cd you-need-an-advisor-mcp
 ```
 
 **2. Install dependencies** (requires [uv](https://docs.astral.sh/uv/)):
@@ -80,7 +80,7 @@ uv run ruff format .
 ## Project structure
 
 ```
-src/ynab_mcp/
+src/ynaa_mcp/
   app.py              # FastMCP instance, AppContext, lifespan
   server.py            # Module wiring (imports all tool/prompt/resource modules)
   client.py            # Async YNAB API client (httpx)
@@ -148,4 +148,4 @@ The `docs/` directory mirrors the site navigation. Add new pages by creating a M
 
 ## Questions?
 
-Open an issue on [GitHub](https://github.com/senivel/ynab-mcp/issues) if you have questions or run into problems.
+Open an issue on [GitHub](https://github.com/senivel/you-need-an-advisor-mcp/issues) if you have questions or run into problems.

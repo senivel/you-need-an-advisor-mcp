@@ -2,7 +2,7 @@
 
 import pytest
 
-from ynab_mcp.tools.budgets import manage_budgets
+from ynaa_mcp.tools.budgets import manage_budgets
 
 
 def _make_budget_get_side_effect():
@@ -79,7 +79,7 @@ class TestManageBudgetsGet:
     @pytest.mark.anyio
     async def test_returns_budget_detail_with_settings(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.budgets.resolve_budget",
+            "ynaa_mcp.tools.budgets.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_client = mock_ctx.lifespan_context.client
@@ -96,7 +96,7 @@ class TestManageBudgetsGet:
     @pytest.mark.anyio
     async def test_prepends_info_message(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.budgets.resolve_budget",
+            "ynaa_mcp.tools.budgets.resolve_budget",
             return_value=(
                 "budget-123",
                 "Using budget 'My Budget' (only budget found)",
@@ -112,7 +112,7 @@ class TestManageBudgetsGet:
     @pytest.mark.anyio
     async def test_passes_budget_id_or_name_to_resolver(self, mock_ctx, mocker):
         mock_resolve = mocker.patch(
-            "ynab_mcp.tools.budgets.resolve_budget",
+            "ynaa_mcp.tools.budgets.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_client = mock_ctx.lifespan_context.client

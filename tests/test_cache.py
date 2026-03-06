@@ -2,7 +2,7 @@
 
 import pytest
 
-from ynab_mcp.cache import (
+from ynaa_mcp.cache import (
     CROSS_INVALIDATION_MAP,
     DELTA_ENDPOINTS,
     CacheStore,
@@ -299,7 +299,7 @@ class TestTTLCache:
 
     def test_set_ttl_stores_data_and_get_ttl_retrieves_it(self, mocker):
         """set_ttl stores data, get_ttl retrieves it within TTL window."""
-        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time = mocker.patch("ynaa_mcp.cache.time")
         mock_time.monotonic.return_value = 1000.0
 
         store = CacheStore()
@@ -312,7 +312,7 @@ class TestTTLCache:
 
     def test_get_ttl_returns_none_after_ttl_expires(self, mocker):
         """get_ttl returns None and cleans up entry after TTL expires."""
-        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time = mocker.patch("ynaa_mcp.cache.time")
         mock_time.monotonic.return_value = 1000.0
 
         store = CacheStore()
@@ -325,7 +325,7 @@ class TestTTLCache:
 
     def test_clear_removes_ttl_entries(self, mocker):
         """clear() removes TTL entries alongside delta entries."""
-        mock_time = mocker.patch("ynab_mcp.cache.time")
+        mock_time = mocker.patch("ynaa_mcp.cache.time")
         mock_time.monotonic.return_value = 1000.0
 
         store = CacheStore()

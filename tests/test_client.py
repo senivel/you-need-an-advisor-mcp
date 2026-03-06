@@ -6,11 +6,11 @@ import httpx
 import pytest
 from fastmcp.exceptions import ToolError
 
-import ynab_mcp.client as client_module
-from ynab_mcp.cache import CacheStore
-from ynab_mcp.client import MILLIUNIT_FIELDS, YNABClient
-from ynab_mcp.errors import YNABAPIError
-from ynab_mcp.rate_limiter import RateLimiter
+import ynaa_mcp.client as client_module
+from ynaa_mcp.cache import CacheStore
+from ynaa_mcp.client import MILLIUNIT_FIELDS, YNABClient
+from ynaa_mcp.errors import YNABAPIError
+from ynaa_mcp.rate_limiter import RateLimiter
 
 
 @pytest.fixture

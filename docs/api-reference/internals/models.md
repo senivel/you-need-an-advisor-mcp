@@ -5,7 +5,7 @@ Pydantic models and TypedDicts for YNAB API response shapes. Base models use `ex
 ---
 
 <!-- prettier-ignore -->
-::: ynab_mcp.models
+::: ynaa_mcp.models
     options:
       show_root_heading: true
       show_source: true

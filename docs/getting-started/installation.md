@@ -24,7 +24,7 @@
     Run directly without installing -- the simplest option:
 
     ```bash
-    uvx ynab-mcp
+    uvx you-need-an-advisor-mcp
     ```
 
     This downloads and runs the latest version in an isolated environment. No project setup needed.
@@ -34,13 +34,13 @@
     Install as a package:
 
     ```bash
-    pip install ynab-mcp
+    pip install you-need-an-advisor-mcp
     ```
 
     Or with uv:
 
     ```bash
-    uv add ynab-mcp
+    uv add you-need-an-advisor-mcp
     ```
 
 === "Development setup"
@@ -48,8 +48,8 @@
     Clone and install for development:
 
     ```bash
-    git clone https://github.com/senivel/ynab-mcp.git
-    cd ynab-mcp
+    git clone https://github.com/senivel/you-need-an-advisor-mcp.git
+    cd you-need-an-advisor-mcp
     uv sync --group dev --group docs
     uv run pre-commit install
     ```

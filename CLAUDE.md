@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MCP (Model Context Protocol) server for YNAB (You Need A Budget). Python 3.13+, managed with uv.
+MCP (Model Context Protocol) server for YNAB (You Need A Budget) -- your AI-powered budget advisor (YNAA = "You Need an Advisor"). Python 3.13+, managed with uv.
 
 ## Commands
 
@@ -36,5 +36,5 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget). Python 3.13+, 
 
 ## Project Structure
 
-- `src/ynab_mcp/` — main package (src layout)
+- `src/ynaa_mcp/` — main package (src layout)
 - `pyproject.toml` — all tool config (ruff, pytest, coverage) lives here

@@ -1,7 +1,7 @@
 """Tests for MCP analysis prompt templates."""
 
-import ynab_mcp.analysis as analysis_module
-from ynab_mcp.analysis import (
+import ynaa_mcp.analysis as analysis_module
+from ynaa_mcp.analysis import (
     BUDGET_HEALTH_TEMPLATE,
     BUDGET_SETUP_ADVISOR_TEMPLATE,
     DEBT_PAYOFF_PLANNER_TEMPLATE,

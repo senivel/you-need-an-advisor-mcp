@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.transactions import manage_transactions
+from ynaa_mcp.tools.transactions import manage_transactions
 
 
 def _make_transaction(  # noqa: PLR0913
@@ -48,7 +48,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_list_all(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -88,7 +88,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_filter_by_account(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -103,7 +103,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_filter_by_category(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -118,7 +118,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_filter_by_payee(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -133,7 +133,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_filter_by_month(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -148,7 +148,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_since_date_query_param(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -163,7 +163,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_until_date_client_side_filter(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -186,7 +186,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_type_query_param(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -201,7 +201,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_mutual_exclusivity(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -213,7 +213,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_limit_truncates(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -233,7 +233,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_empty_result(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -247,7 +247,7 @@ class TestManageTransactionsList:
     @pytest.mark.anyio
     async def test_no_payee_no_category(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -268,7 +268,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_full_detail_view(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -300,7 +300,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_shows_memo(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -316,7 +316,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_shows_flag_color(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -332,7 +332,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_shows_transfer_account(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -350,7 +350,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_subtransactions(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -378,7 +378,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_no_payee_no_category(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -395,7 +395,7 @@ class TestManageTransactionsGet:
     @pytest.mark.anyio
     async def test_get_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -409,7 +409,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_sends_post(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -441,7 +441,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_converts_dollars_to_milliunits(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -463,7 +463,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_includes_optional_fields(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -498,7 +498,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_excludes_none_optional_fields(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -522,7 +522,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_missing_account_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -537,7 +537,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_missing_date_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -552,7 +552,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_missing_amount_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -567,7 +567,7 @@ class TestManageTransactionsCreate:
     @pytest.mark.anyio
     async def test_create_returns_confirmation(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -600,7 +600,7 @@ class TestManageTransactionsUpdate:
     @pytest.mark.anyio
     async def test_update_sends_put(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -624,7 +624,7 @@ class TestManageTransactionsUpdate:
     @pytest.mark.anyio
     async def test_update_converts_amount(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -645,7 +645,7 @@ class TestManageTransactionsUpdate:
     @pytest.mark.anyio
     async def test_update_returns_confirmation(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -672,7 +672,7 @@ class TestManageTransactionsUpdate:
     @pytest.mark.anyio
     async def test_update_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -686,7 +686,7 @@ class TestManageTransactionsDelete:
     @pytest.mark.anyio
     async def test_delete_sends_delete(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.delete.return_value = {
@@ -712,7 +712,7 @@ class TestManageTransactionsDelete:
     @pytest.mark.anyio
     async def test_delete_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -726,7 +726,7 @@ class TestManageTransactionsBatchCreate:
     @pytest.mark.anyio
     async def test_batch_create_posts_with_converted_amounts(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -753,7 +753,7 @@ class TestManageTransactionsBatchCreate:
     @pytest.mark.anyio
     async def test_batch_create_returns_summary(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -779,7 +779,7 @@ class TestManageTransactionsBatchCreate:
     @pytest.mark.anyio
     async def test_batch_create_empty_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -789,7 +789,7 @@ class TestManageTransactionsBatchCreate:
     @pytest.mark.anyio
     async def test_batch_create_includes_duplicate_ids(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -815,7 +815,7 @@ class TestManageTransactionsBatchUpdate:
     @pytest.mark.anyio
     async def test_batch_update_patches_with_converted_amounts(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -838,7 +838,7 @@ class TestManageTransactionsBatchUpdate:
     @pytest.mark.anyio
     async def test_batch_update_returns_summary(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -864,7 +864,7 @@ class TestManageTransactionsBatchUpdate:
     @pytest.mark.anyio
     async def test_batch_update_empty_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -878,7 +878,7 @@ class TestManageTransactionsImport:
     @pytest.mark.anyio
     async def test_import_posts_and_returns_ids(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -897,7 +897,7 @@ class TestManageTransactionsImport:
     @pytest.mark.anyio
     async def test_import_empty_result(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.transactions.resolve_budget",
+            "ynaa_mcp.tools.transactions.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {

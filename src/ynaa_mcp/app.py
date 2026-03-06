@@ -15,9 +15,9 @@ from dataclasses import dataclass
 import httpx
 from fastmcp import FastMCP
 
-from ynab_mcp.cache import CacheStore
-from ynab_mcp.client import YNABClient
-from ynab_mcp.rate_limiter import RateLimiter
+from ynaa_mcp.cache import CacheStore
+from ynaa_mcp.client import YNABClient
+from ynaa_mcp.rate_limiter import RateLimiter
 
 
 logger = logging.getLogger(__name__)

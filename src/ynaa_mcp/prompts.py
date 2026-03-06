@@ -10,12 +10,12 @@ subpackage via importlib.resources.
 
 from importlib import resources as pkg_resources
 
-from ynab_mcp.app import mcp
+from ynaa_mcp.app import mcp
 
 
 _RESOURCE_BASE = "ynab://budgets"
 
-_templates = pkg_resources.files("ynab_mcp.templates.prompts")
+_templates = pkg_resources.files("ynaa_mcp.templates.prompts")
 REVIEW_SPENDING_TEMPLATE = _templates.joinpath(
     "review-monthly-spending.md",
 ).read_text(encoding="utf-8")

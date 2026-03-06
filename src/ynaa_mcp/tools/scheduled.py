@@ -5,9 +5,9 @@ from typing import Any, Literal, cast
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.app import AppContext, mcp
-from ynab_mcp.budget_resolver import resolve_budget
-from ynab_mcp.converters import dollars_to_milliunits, format_dollars
+from ynaa_mcp.app import AppContext, mcp
+from ynaa_mcp.budget_resolver import resolve_budget
+from ynaa_mcp.converters import dollars_to_milliunits, format_dollars
 
 
 def _format_scheduled_transaction_line(txn: dict[str, Any]) -> list[str]:

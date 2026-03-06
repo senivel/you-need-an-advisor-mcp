@@ -83,7 +83,7 @@ Most other tools need to know _which_ budget to work with. If you only have one,
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.budgets.manage_budgets
+::: ynaa_mcp.tools.budgets.manage_budgets
     options:
       show_root_heading: true
       show_source: true

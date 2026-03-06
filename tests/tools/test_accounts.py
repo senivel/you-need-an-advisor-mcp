@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.accounts import manage_accounts
+from ynaa_mcp.tools.accounts import manage_accounts
 
 
 def _make_account(  # noqa: PLR0913
@@ -47,7 +47,7 @@ class TestManageAccountsList:
     async def test_list_accounts(self, mock_ctx, mocker):
         """Count header, structured format, dollar formatting."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -77,7 +77,7 @@ class TestManageAccountsList:
     async def test_list_accounts_excludes_closed(self, mock_ctx, mocker):
         """Closed accounts filtered by default."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -99,7 +99,7 @@ class TestManageAccountsList:
     async def test_list_accounts_include_closed(self, mock_ctx, mocker):
         """include_closed=True shows closed but not deleted accounts."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -121,7 +121,7 @@ class TestManageAccountsList:
     async def test_list_accounts_empty(self, mock_ctx, mocker):
         """No accounts returns appropriate message."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -136,7 +136,7 @@ class TestManageAccountsList:
     async def test_list_accounts_empty_after_filter(self, mock_ctx, mocker):
         """All accounts closed returns filtered message."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -153,7 +153,7 @@ class TestManageAccountsList:
     async def test_list_accounts_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", "Using budget 'My Budget' (only budget found)"),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -174,7 +174,7 @@ class TestManageAccountsGet:
     async def test_get_account(self, mock_ctx, mocker):
         """Detail view has all fields, dollar amounts formatted."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -204,7 +204,7 @@ class TestManageAccountsGet:
     async def test_get_account_no_note(self, mock_ctx, mocker):
         """Note line omitted when note is None."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -219,7 +219,7 @@ class TestManageAccountsGet:
     async def test_get_account_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", "Using budget 'My Budget' (only budget found)"),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -234,7 +234,7 @@ class TestManageAccountsGet:
     async def test_get_account_missing_id_raises(self, mock_ctx, mocker):
         """ToolError raised when account_id is missing for get action."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -249,7 +249,7 @@ class TestManageAccountsCreate:
     async def test_create_account(self, mock_ctx, mocker):
         """Verifies POST called with milliunits, confirmation message format."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -291,7 +291,7 @@ class TestManageAccountsCreate:
     async def test_create_account_dollar_conversion(self, mock_ctx, mocker):
         """$100.50 -> 100500 milliunits in request body."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -319,7 +319,7 @@ class TestManageAccountsCreate:
     async def test_create_account_prepends_info(self, mock_ctx, mocker):
         """Info message from resolve_budget is prepended."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=(
                 "budget-123",
                 "Using budget 'My Budget' (only budget found)",
@@ -343,7 +343,7 @@ class TestManageAccountsCreate:
     async def test_create_account_missing_params_raises(self, mock_ctx, mocker):
         """ToolError raised when required create params are missing."""
         mocker.patch(
-            "ynab_mcp.tools.accounts.resolve_budget",
+            "ynaa_mcp.tools.accounts.resolve_budget",
             return_value=("budget-123", None),
         )
 

@@ -1,4 +1,4 @@
-# YNAB MCP
+# You Need an Advisor MCP
 
 **Not just API coverage -- a YNAB budgeting advisor powered by embedded methodology knowledge.**
 
@@ -25,7 +25,7 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants li
   "mcpServers": {
     "ynab": {
       "command": "uvx",
-      "args": ["ynab-mcp"],
+      "args": ["you-need-an-advisor-mcp"],
       "env": {
         "YNAB_PAT": "your-token-here"
       }
@@ -38,10 +38,10 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants li
 
 ## Documentation
 
-Full documentation: **[senivel.github.io/ynab-mcp](https://senivel.github.io/ynab-mcp/)**
+Full documentation: **[senivel.github.io/you-need-an-advisor-mcp](https://senivel.github.io/you-need-an-advisor-mcp/)**
 
 ## Links
 
-- [Contributing](https://senivel.github.io/ynab-mcp/contributing/)
-- [Changelog](https://senivel.github.io/ynab-mcp/contributing/changelog/)
+- [Contributing](https://senivel.github.io/you-need-an-advisor-mcp/contributing/)
+- [Changelog](https://senivel.github.io/you-need-an-advisor-mcp/contributing/changelog/)
 - [License](LICENSE)

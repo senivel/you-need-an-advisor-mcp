@@ -60,7 +60,7 @@ Categories are organized into **category groups** (like "Monthly Bills", "Fun Mo
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.categories.manage_categories
+::: ynaa_mcp.tools.categories.manage_categories
     options:
       show_root_heading: true
       show_source: true

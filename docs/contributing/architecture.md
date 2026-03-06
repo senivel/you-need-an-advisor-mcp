@@ -13,7 +13,7 @@ FastMCP Server (server.py)
     |  - Manages lifespan (startup/shutdown)
     |
     v
-Tool Modules (ynab_mcp.tools.*)
+Tool Modules (ynaa_mcp.tools.*)
     |  - budgets, accounts, categories, transactions
     |  - payees, months, scheduled, cache
     |  - Each module registers tools via @mcp.tool()
@@ -51,7 +51,7 @@ Budget Resolver (budget_resolver.py)
 
 **Lifespan-managed resources.** The httpx `AsyncClient` is created once during server startup and shared across all tool calls. No per-request client creation, no connection leaks.
 
-**Modular tool registration.** Tool functions live in domain-specific modules under `ynab_mcp.tools.*` (e.g., `tools/budgets.py`, `tools/transactions.py`). Each module imports the shared `mcp` instance from `app.py` and registers its tools via `@mcp.tool()`. The `server.py` file is a thin wiring layer that imports all modules.
+**Modular tool registration.** Tool functions live in domain-specific modules under `ynaa_mcp.tools.*` (e.g., `tools/budgets.py`, `tools/transactions.py`). Each module imports the shared `mcp` instance from `app.py` and registers its tools via `@mcp.tool()`. The `server.py` file is a thin wiring layer that imports all modules.
 
 **Boundary conversion.** YNAB uses milliunits internally (1 dollar = 1,000 milliunits). Conversion happens at the client layer so tools always work with human-readable dollar amounts.
 

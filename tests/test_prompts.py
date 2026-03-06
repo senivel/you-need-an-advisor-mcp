@@ -1,7 +1,7 @@
 """Tests for MCP Prompt templates: spending review, transaction entry, health check."""
 
-import ynab_mcp.prompts as prompts_module
-from ynab_mcp.prompts import (
+import ynaa_mcp.prompts as prompts_module
+from ynaa_mcp.prompts import (
     BUDGET_HEALTH_TEMPLATE,
     ENTER_TRANSACTIONS_TEMPLATE,
     REVIEW_SPENDING_TEMPLATE,

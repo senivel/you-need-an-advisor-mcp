@@ -10,10 +10,10 @@ from the ``methodology/`` subpackage.
 
 from importlib import resources as pkg_resources
 
-from ynab_mcp.app import mcp
+from ynaa_mcp.app import mcp
 
 
-_methodology = pkg_resources.files("ynab_mcp.methodology")
+_methodology = pkg_resources.files("ynaa_mcp.methodology")
 
 TERMINOLOGY_CONTENT = _methodology.joinpath("terminology.md").read_text(
     encoding="utf-8",

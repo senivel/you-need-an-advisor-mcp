@@ -35,7 +35,7 @@ You can clear the cache for a specific budget by ID, or clear everything at once
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.cache.clear_cache
+::: ynaa_mcp.tools.cache.clear_cache
     options:
       show_root_heading: true
       show_source: true

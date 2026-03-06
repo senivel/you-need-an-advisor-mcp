@@ -1,18 +1,18 @@
-# YNAB MCP
+# You Need an Advisor MCP
 
 **Your AI-powered YNAB budgeting advisor**
 
-YNAB MCP is more than an API wrapper. It connects AI assistants like Claude to your [YNAB](https://www.ynab.com/) budget with embedded knowledge of YNAB's budgeting methodology -- so you get advice grounded in both your real data and proven budgeting principles.
+You Need an Advisor MCP is more than an API wrapper. It connects AI assistants like Claude to your [YNAB](https://www.ynab.com/) budget with embedded knowledge of YNAB's budgeting methodology -- so you get advice grounded in both your real data and proven budgeting principles.
 
 ```bash
-uvx ynab-mcp
+uvx you-need-an-advisor-mcp
 ```
 
 ---
 
 ## What makes this different
 
-Most YNAB integrations give you raw data. YNAB MCP gives you a **budgeting advisor** that understands the Four Rules, knows how to handle overspending, and can walk you through a debt payoff plan -- all while pulling live numbers from your budget.
+Most YNAB integrations give you raw data. You Need an Advisor MCP gives you a **budgeting advisor** that understands the Four Rules, knows how to handle overspending, and can walk you through a debt payoff plan -- all while pulling live numbers from your budget.
 
 ---
 
@@ -71,7 +71,7 @@ Most YNAB integrations give you raw data. YNAB MCP gives you a **budgeting advis
   "mcpServers": {
     "ynab": {
       "command": "uvx",
-      "args": ["ynab-mcp"],
+      "args": ["you-need-an-advisor-mcp"],
       "env": {
         "YNAB_PAT": "your-token-here"
       }

@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.scheduled import manage_scheduled_transactions
+from ynaa_mcp.tools.scheduled import manage_scheduled_transactions
 
 
 def _make_scheduled_transaction(  # noqa: PLR0913
@@ -54,7 +54,7 @@ class TestManageScheduledList:
     @pytest.mark.anyio
     async def test_list_returns_count_and_formatted_lines(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -93,7 +93,7 @@ class TestManageScheduledList:
     @pytest.mark.anyio
     async def test_list_excludes_deleted(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -112,7 +112,7 @@ class TestManageScheduledList:
     @pytest.mark.anyio
     async def test_list_uses_date_first_when_no_date_next(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -132,7 +132,7 @@ class TestManageScheduledList:
     @pytest.mark.anyio
     async def test_list_empty(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -150,7 +150,7 @@ class TestManageScheduledGet:
     @pytest.mark.anyio
     async def test_full_detail(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -186,7 +186,7 @@ class TestManageScheduledGet:
     @pytest.mark.anyio
     async def test_subtransactions(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -214,7 +214,7 @@ class TestManageScheduledGet:
     @pytest.mark.anyio
     async def test_no_date_next(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -230,7 +230,7 @@ class TestManageScheduledGet:
     @pytest.mark.anyio
     async def test_get_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -244,7 +244,7 @@ class TestManageScheduledCreate:
     @pytest.mark.anyio
     async def test_create_sends_post(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -281,7 +281,7 @@ class TestManageScheduledCreate:
     @pytest.mark.anyio
     async def test_create_missing_required_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -297,7 +297,7 @@ class TestManageScheduledCreate:
     @pytest.mark.anyio
     async def test_create_returns_confirmation(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -332,7 +332,7 @@ class TestManageScheduledUpdate:
     @pytest.mark.anyio
     async def test_update_sends_put(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.put.return_value = {
@@ -358,7 +358,7 @@ class TestManageScheduledUpdate:
     @pytest.mark.anyio
     async def test_update_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -374,7 +374,7 @@ class TestManageScheduledDelete:
     @pytest.mark.anyio
     async def test_delete_sends_delete(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.delete.return_value = {
@@ -399,7 +399,7 @@ class TestManageScheduledDelete:
     @pytest.mark.anyio
     async def test_delete_without_id_raises(self, mock_ctx, mocker):
         mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
+            "ynaa_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 

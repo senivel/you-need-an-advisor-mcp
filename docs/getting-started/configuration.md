@@ -32,7 +32,7 @@ Claude Desktop has built-in MCP support. Add the server to your `claude_desktop_
       "mcpServers": {
         "ynab": {
           "command": "uvx",
-          "args": ["ynab-mcp"],
+          "args": ["you-need-an-advisor-mcp"],
           "env": {
             "YNAB_PAT": "your-personal-access-token"
           }
@@ -50,7 +50,7 @@ Claude Desktop has built-in MCP support. Add the server to your `claude_desktop_
       "mcpServers": {
         "ynab": {
           "command": "uv",
-          "args": ["run", "ynab-mcp"],
+          "args": ["run", "ynaa-mcp"],
           "env": {
             "YNAB_PAT": "your-personal-access-token"
           }
@@ -79,7 +79,7 @@ Any MCP-compatible client can connect to YNAB MCP using the stdio transport. The
 ```json
 {
   "command": "uvx",
-  "args": ["ynab-mcp"],
+  "args": ["you-need-an-advisor-mcp"],
   "env": {
     "YNAB_PAT": "your-personal-access-token"
   }

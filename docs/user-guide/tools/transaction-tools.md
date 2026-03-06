@@ -62,7 +62,7 @@ Every transaction in YNAB has a **cleared state** that tracks its journey:
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.transactions.manage_transactions
+::: ynaa_mcp.tools.transactions.manage_transactions
     options:
       show_root_heading: true
       show_source: true

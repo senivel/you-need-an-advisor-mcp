@@ -1,8 +1,8 @@
-site_name: YNAB MCP
-site_description: MCP server for You Need A Budget
-site_url: https://senivel.github.io/ynab-mcp/
-repo_url: https://github.com/senivel/ynab-mcp
-repo_name: senivel/ynab-mcp
+site_name: You Need an Advisor MCP
+site_description: MCP server for YNAB -- your AI-powered budget advisor
+site_url: https://senivel.github.io/you-need-an-advisor-mcp/
+repo_url: https://github.com/senivel/you-need-an-advisor-mcp
+repo_name: senivel/you-need-an-advisor-mcp
 edit_uri: edit/main/docs/
 
 theme:

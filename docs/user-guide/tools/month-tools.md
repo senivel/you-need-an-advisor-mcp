@@ -61,7 +61,7 @@ The **Age of Money** metric is especially useful here -- it tells you how many d
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.months.manage_months
+::: ynaa_mcp.tools.months.manage_months
     options:
       show_root_heading: true
       show_source: true

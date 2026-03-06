@@ -58,7 +58,7 @@ In YNAB, scheduled transactions automatically create real transactions on their 
 ## API Reference
 
 <!-- prettier-ignore -->
-::: ynab_mcp.tools.scheduled.manage_scheduled_transactions
+::: ynaa_mcp.tools.scheduled.manage_scheduled_transactions
     options:
       show_root_heading: true
       show_source: true

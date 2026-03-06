@@ -3,7 +3,7 @@
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.categories import manage_categories
+from ynaa_mcp.tools.categories import manage_categories
 
 
 def _sample_category_groups():
@@ -115,7 +115,7 @@ class TestManageCategoriesList:
     async def test_list_categories(self, mock_ctx, mocker):
         """Hierarchy format with count header and indentation."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
@@ -138,7 +138,7 @@ class TestManageCategoriesList:
     async def test_list_categories_filters_hidden(self, mock_ctx, mocker):
         """Hidden categories excluded by default."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
@@ -151,7 +151,7 @@ class TestManageCategoriesList:
     async def test_list_categories_include_hidden(self, mock_ctx, mocker):
         """include_hidden=True shows all categories."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
@@ -165,7 +165,7 @@ class TestManageCategoriesList:
     async def test_list_categories_filters_deleted(self, mock_ctx, mocker):
         """Deleted groups and categories always excluded."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_category_groups()
@@ -179,7 +179,7 @@ class TestManageCategoriesList:
     async def test_list_categories_empty(self, mock_ctx, mocker):
         """Empty budget returns appropriate message."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {"category_groups": []}
@@ -196,7 +196,7 @@ class TestManageCategoriesGet:
     async def test_get_category(self, mock_ctx, mocker):
         """Detail view with all fields."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -235,7 +235,7 @@ class TestManageCategoriesGet:
     async def test_get_category_with_goal(self, mock_ctx, mocker):
         """Goal section present when goal_type is set."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -271,7 +271,7 @@ class TestManageCategoriesGet:
     async def test_get_category_without_goal(self, mock_ctx, mocker):
         """No goal section when goal_type is None."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
@@ -303,7 +303,7 @@ class TestManageCategoriesGet:
     async def test_get_category_missing_id_raises(self, mock_ctx, mocker):
         """ToolError raised when category_id missing for get action."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -318,7 +318,7 @@ class TestManageCategoriesCreate:
     async def test_create_category(self, mock_ctx, mocker):
         """POST body correct, confirmation format."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -352,7 +352,7 @@ class TestManageCategoriesCreate:
     async def test_create_category_with_goal(self, mock_ctx, mocker):
         """goal_target converted to milliunits in POST body."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -382,7 +382,7 @@ class TestManageCategoriesUpdate:
     async def test_update_category(self, mock_ctx, mocker):
         """PATCH body only includes provided fields, category_id in path."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -412,7 +412,7 @@ class TestManageCategoriesUpdate:
     async def test_update_category_goal_conversion(self, mock_ctx, mocker):
         """goal_target converted from dollars to milliunits in PATCH."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -445,7 +445,7 @@ class TestManageCategoriesGroup:
     async def test_create_group(self, mock_ctx, mocker):
         """POST body correct, confirmation format."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.post.return_value = {
@@ -470,7 +470,7 @@ class TestManageCategoriesGroup:
     async def test_create_group_name_too_long(self, mock_ctx, mocker):
         """ToolError raised for name > 50 chars."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
 
@@ -481,7 +481,7 @@ class TestManageCategoriesGroup:
     async def test_update_group(self, mock_ctx, mocker):
         """PATCH body correct, confirmation, category_group_id in path."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -537,7 +537,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_get_month_budget(self, mock_ctx, mocker):
         """Correct API path with normalized month, structured output."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
@@ -561,7 +561,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_get_month_budget_default_month(self, mock_ctx, mocker):
         """None month sends 'current' to API."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
@@ -577,7 +577,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_get_month_budget_normalizes(self, mock_ctx, mocker):
         """'2026-03' becomes '2026-03-01' in API path."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = _sample_month_category()
@@ -596,7 +596,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_set_month_budget(self, mock_ctx, mocker):
         """Budgeted converted to milliunits, correct PATCH body."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -627,7 +627,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_set_month_budget_default_month(self, mock_ctx, mocker):
         """None month defaults to 'current' for update."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {
@@ -652,7 +652,7 @@ class TestManageCategoriesSetMonthBudget:
     async def test_set_month_budget_confirmation(self, mock_ctx, mocker):
         """Response includes formatted dollar amount."""
         mocker.patch(
-            "ynab_mcp.tools.categories.resolve_budget",
+            "ynaa_mcp.tools.categories.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.patch.return_value = {

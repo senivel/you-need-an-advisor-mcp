@@ -19,7 +19,7 @@ Running into issues? This page covers the most common problems and how to fix th
           "mcpServers": {
             "ynab": {
               "command": "uvx",
-              "args": ["ynab-mcp"],
+              "args": ["you-need-an-advisor-mcp"],
               "env": {
                 "YNAB_PAT": "your-token-here"
               }
@@ -138,7 +138,7 @@ Running into issues? This page covers the most common problems and how to fix th
 
     3. **Try running the server manually** to see if it starts:
        ```bash
-       uvx ynab-mcp
+       uvx you-need-an-advisor-mcp
        ```
        If this errors, the issue is with the server installation, not the client config.
 
@@ -158,7 +158,7 @@ Running into issues? This page covers the most common problems and how to fix th
 
 If your issue isn't listed here:
 
-1. **Check the [GitHub Issues](https://github.com/senivel/ynab-mcp/issues)** -- someone may have already reported and resolved the same problem
+1. **Check the [GitHub Issues](https://github.com/senivel/you-need-an-advisor-mcp/issues)** -- someone may have already reported and resolved the same problem
 2. **Open a new issue** with:
    - Your operating system
    - How you installed the server (`uvx`, `uv run`, etc.)
