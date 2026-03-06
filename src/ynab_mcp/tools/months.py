@@ -1,36 +1,26 @@
-"""Month tools: list months, month detail, money movements."""
+"""Month tools: consolidated manage_months with action-parameter dispatch."""
+
+from typing import Literal
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from ynab_mcp.app import AppContext, mcp
 from ynab_mcp.budget_resolver import resolve_budget
 from ynab_mcp.converters import format_dollars, normalize_month
 
 
-@mcp.tool
-async def list_months(
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-) -> str:
-    """List all budget months in a YNAB budget.
-
-    Returns a count header followed by each month's income, budgeted,
-    activity, to-be-budgeted, and age of money. Deleted months are
-    always excluded.
+async def _list_months(app: AppContext, budget_id: str) -> str:
+    """List all budget months, excluding deleted ones.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
 
     Returns:
         Structured text with count header and month summaries,
         or "No months found." if none exist.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.get(f"/budgets/{budget_id}/months")
     all_months = data["months"]
 
@@ -57,32 +47,17 @@ async def list_months(
     return "\n".join(lines)
 
 
-@mcp.tool
-async def get_month(
-    ctx: Context,
-    month: str,
-    budget_id_or_name: str = "last-used",
-) -> str:
+async def _get_month(app: AppContext, budget_id: str, month: str) -> str:
     """Get detailed information about a specific budget month.
 
-    Returns the month-level financial summary (income, budgeted,
-    activity, to-be-budgeted, age of money) followed by categories
-    grouped by category group. Each category shows budgeted, activity,
-    and balance.
-
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
         month: Month as "YYYY-MM" or "YYYY-MM-DD".
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
 
     Returns:
         Structured text with month summary and grouped category detail.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     normalized = normalize_month(month)
     data = await app.client.get(f"/budgets/{budget_id}/months/{normalized}")
     m = data["month"]
@@ -122,32 +97,22 @@ async def get_month(
     return "\n".join(lines)
 
 
-@mcp.tool
-async def list_money_movements(
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-    month: str | None = None,
+async def _list_money_movements(
+    app: AppContext,
+    budget_id: str,
+    month: str | None,
 ) -> str:
-    """List money movements in a YNAB budget.
-
-    Without ``month``: returns budget-wide money movements (all time).
-    With ``month``: returns money movements for a specific month only.
-    Each movement shows category name, group, allocation, spent, and income.
+    """List money movements in a budget, optionally scoped to a month.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
         month: If provided, scope to this month ("YYYY-MM" or "YYYY-MM-DD").
 
     Returns:
         Structured text with count header and movement lines,
         or "No money movements found." if none exist.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     if month is not None:
         normalized = normalize_month(month)
         path = f"/budgets/{budget_id}/months/{normalized}/money_movements"
@@ -177,32 +142,22 @@ async def list_money_movements(
     return "\n".join(lines)
 
 
-@mcp.tool
-async def list_money_movement_groups(
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-    month: str | None = None,
+async def _list_money_movement_groups(
+    app: AppContext,
+    budget_id: str,
+    month: str | None,
 ) -> str:
-    """List money movement groups in a YNAB budget.
-
-    Without ``month``: returns budget-wide money movement groups (all time).
-    With ``month``: returns money movement groups for a specific month only.
-    Each group shows category group name, allocation, spent, and income.
+    """List money movement groups in a budget, optionally scoped to a month.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
         month: If provided, scope to this month ("YYYY-MM" or "YYYY-MM-DD").
 
     Returns:
         Structured text with count header and group lines,
         or "No money movement groups found." if none exist.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     if month is not None:
         normalized = normalize_month(month)
         path = f"/budgets/{budget_id}/months/{normalized}/money_movement_groups"
@@ -227,3 +182,61 @@ async def list_money_movement_groups(
         ))
 
     return "\n".join(lines)
+
+
+@mcp.tool
+async def manage_months(
+    ctx: Context,
+    action: Literal[
+        "list", "get", "list_money_movements", "list_money_movement_groups"
+    ],
+    budget_id_or_name: str = "last-used",
+    month: str | None = None,
+) -> str:
+    """Manage YNAB budget months: list, get detail, and view money movements.
+
+    Dispatches to the appropriate action based on the ``action`` parameter.
+
+    Actions:
+        list: List all budget months with income, budgeted, activity,
+            to-be-budgeted, and age of money. Params: budget_id_or_name.
+        get: Get detailed month with category breakdowns grouped by
+            category group. Params: budget_id_or_name, month (required).
+        list_money_movements: List money movements (category-level).
+            Params: budget_id_or_name, month (optional -- all if omitted).
+        list_money_movement_groups: List money movement groups (group-level).
+            Params: budget_id_or_name, month (optional -- all if omitted).
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        action: The operation to perform.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        month: Month as "YYYY-MM" or "YYYY-MM-DD". Required for "get",
+            optional for "list_money_movements" and
+            "list_money_movement_groups".
+
+    Returns:
+        Structured text with the requested month data.
+
+    Raises:
+        ToolError: If "get" is called without ``month``.
+    """
+    app: AppContext = ctx.lifespan_context
+    budget_id, _info = await resolve_budget(
+        app.client, budget_id_or_name, cache=app.cache
+    )
+
+    if action == "list":
+        return await _list_months(app, budget_id)
+
+    if action == "get":
+        if month is None:
+            msg = "action='get' requires 'month' parameter"
+            raise ToolError(msg)
+        return await _get_month(app, budget_id, month)
+
+    if action == "list_money_movements":
+        return await _list_money_movements(app, budget_id, month)
+
+    # Last action: list_money_movement_groups
+    return await _list_money_movement_groups(app, budget_id, month)

@@ -1,4 +1,6 @@
-"""Scheduled transaction tools: list, detail, create/update, delete."""
+"""Scheduled transaction tools: consolidated manage_scheduled_transactions."""
+
+from typing import Literal
 
 from fastmcp import Context
 from fastmcp.exceptions import ToolError
@@ -94,34 +96,20 @@ def _format_scheduled_transaction_confirmation(verb: str, txn: dict) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool
-async def list_scheduled_transactions(
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-) -> str:
-    """List all scheduled transactions in a YNAB budget.
-
-    Returns a count header followed by each scheduled transaction's
-    next date, payee, amount, category, and frequency. Deleted
-    scheduled transactions are always excluded.
+async def _list_scheduled(app: AppContext, budget_id: str) -> str:
+    """List all scheduled transactions, excluding deleted ones.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
 
     Returns:
         Structured text with count header and scheduled transaction lines,
         or "No scheduled transactions found." if none exist.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.get(f"/budgets/{budget_id}/scheduled_transactions")
     all_txns = data["scheduled_transactions"]
 
-    # Exclude deleted
     txns = [t for t in all_txns if not t["deleted"]]
 
     if not txns:
@@ -136,31 +124,21 @@ async def list_scheduled_transactions(
     return "\n".join(lines)
 
 
-@mcp.tool
-async def get_scheduled_transaction(
-    ctx: Context,
+async def _get_scheduled(
+    app: AppContext,
+    budget_id: str,
     scheduled_transaction_id: str,
-    budget_id_or_name: str = "last-used",
 ) -> str:
     """Get detailed information about a specific scheduled transaction.
 
-    Returns all scheduled transaction fields including payee, amount,
-    account, category, frequency, first and next dates, and optional
-    fields (memo, flag). Subtransactions are shown as an indented list.
-
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
         scheduled_transaction_id: The scheduled transaction UUID.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
 
     Returns:
         Structured text with full scheduled transaction detail view.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
-
     data = await app.client.get(
         f"/budgets/{budget_id}/scheduled_transactions/{scheduled_transaction_id}",
     )
@@ -170,60 +148,49 @@ async def get_scheduled_transaction(
     return "\n".join(lines)
 
 
-@mcp.tool
-async def manage_scheduled_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
-    ctx: Context,
-    budget_id_or_name: str = "last-used",
-    scheduled_transaction_id: str | None = None,
-    account_id: str | None = None,
-    date: str | None = None,
-    amount: float | None = None,
-    frequency: str | None = None,
-    payee_name: str | None = None,
-    payee_id: str | None = None,
-    category_id: str | None = None,
-    memo: str | None = None,
-    flag_color: str | None = None,
+async def _create_scheduled(  # noqa: PLR0913, PLR0917, C901
+    app: AppContext,
+    budget_id: str,
+    account_id: str | None,
+    date: str | None,
+    amount: float | None,
+    frequency: str | None,
+    payee_name: str | None,
+    payee_id: str | None,
+    category_id: str | None,
+    memo: str | None,
+    flag_color: str | None,
 ) -> str:
-    """Create or update a YNAB scheduled transaction.
-
-    Without ``scheduled_transaction_id``: creates a new scheduled
-    transaction (POST). Requires ``account_id`` and ``date``.
-    With ``scheduled_transaction_id``: updates an existing scheduled
-    transaction (PUT), only sending fields that are not None.
-
-    Dollar amounts for ``amount`` are converted to YNAB milliunits.
+    """Create a new scheduled transaction.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
-        scheduled_transaction_id: If provided, update this scheduled
-            transaction. If None, create new.
-        account_id: Account UUID (required for create).
-        date: Scheduled transaction date as ISO string (required for create).
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
+        account_id: Account UUID (required).
+        date: Scheduled transaction date (required).
         amount: Amount in dollars (converted to milliunits).
-        frequency: Recurrence frequency (never, daily, weekly, everyOtherWeek,
-            twiceAMonth, every4Weeks, monthly, everyOtherMonth,
-            every3Months, every4Months, twiceAYear, yearly,
-            everyOtherYear).
+        frequency: Recurrence frequency.
         payee_name: Payee display name.
         payee_id: Payee UUID.
         category_id: Category UUID.
-        memo: Scheduled transaction memo.
-        flag_color: Flag color for the scheduled transaction.
+        memo: Memo text.
+        flag_color: Flag color.
 
     Returns:
         Confirmation text with key scheduled transaction fields.
 
     Raises:
-        ToolError: If creating without required fields (account_id, date).
+        ToolError: If required fields (account_id, date) are missing.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, _info = await resolve_budget(
-        app.client, budget_id_or_name, cache=app.cache
-    )
+    missing = []
+    if account_id is None:
+        missing.append("account_id")
+    if date is None:
+        missing.append("date")
+    if missing:
+        msg = f"Create requires: {', '.join(missing)}"
+        raise ToolError(msg)
 
-    # Optional fields shared between create and update
     optional_fields: dict[str, str | int] = {}
     if payee_name is not None:
         optional_fields["payee_name"] = payee_name
@@ -238,34 +205,70 @@ async def manage_scheduled_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
     if frequency is not None:
         optional_fields["frequency"] = frequency
 
-    if scheduled_transaction_id is None:
-        # CREATE mode
-        missing = []
-        if account_id is None:
-            missing.append("account_id")
-        if date is None:
-            missing.append("date")
-        if missing:
-            msg = f"Create requires: {', '.join(missing)}"
-            raise ToolError(msg)
+    body: dict = {
+        "account_id": account_id,
+        "date": date,
+        **optional_fields,
+    }
+    if amount is not None:
+        body["amount"] = dollars_to_milliunits(amount)
 
-        body: dict = {
-            "account_id": account_id,
-            "date": date,
-            **optional_fields,
-        }
-        if amount is not None:
-            body["amount"] = dollars_to_milliunits(amount)
+    data = await app.client.post(
+        f"/budgets/{budget_id}/scheduled_transactions",
+        json={"scheduled_transaction": body},
+    )
+    txn = data["scheduled_transaction"]
+    return _format_scheduled_transaction_confirmation("created", txn)
 
-        data = await app.client.post(
-            f"/budgets/{budget_id}/scheduled_transactions",
-            json={"scheduled_transaction": body},
-        )
-        txn = data["scheduled_transaction"]
-        return _format_scheduled_transaction_confirmation("created", txn)
 
-    # UPDATE mode
-    body = {**optional_fields}
+async def _update_scheduled(  # noqa: PLR0913, PLR0917
+    app: AppContext,
+    budget_id: str,
+    scheduled_transaction_id: str,
+    account_id: str | None,
+    date: str | None,
+    amount: float | None,
+    frequency: str | None,
+    payee_name: str | None,
+    payee_id: str | None,
+    category_id: str | None,
+    memo: str | None,
+    flag_color: str | None,
+) -> str:
+    """Update an existing scheduled transaction.
+
+    Args:
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
+        scheduled_transaction_id: The scheduled transaction UUID.
+        account_id: Account UUID.
+        date: Scheduled transaction date.
+        amount: Amount in dollars (converted to milliunits).
+        frequency: Recurrence frequency.
+        payee_name: Payee display name.
+        payee_id: Payee UUID.
+        category_id: Category UUID.
+        memo: Memo text.
+        flag_color: Flag color.
+
+    Returns:
+        Confirmation text with key scheduled transaction fields.
+    """
+    optional_fields: dict[str, str | int] = {}
+    if payee_name is not None:
+        optional_fields["payee_name"] = payee_name
+    if payee_id is not None:
+        optional_fields["payee_id"] = payee_id
+    if category_id is not None:
+        optional_fields["category_id"] = category_id
+    if memo is not None:
+        optional_fields["memo"] = memo
+    if flag_color is not None:
+        optional_fields["flag_color"] = flag_color
+    if frequency is not None:
+        optional_fields["frequency"] = frequency
+
+    body: dict = {**optional_fields}
     if amount is not None:
         body["amount"] = dollars_to_milliunits(amount)
     if date is not None:
@@ -281,32 +284,138 @@ async def manage_scheduled_transaction(  # noqa: PLR0913, PLR0917, C901, PLR0912
     return _format_scheduled_transaction_confirmation("updated", txn)
 
 
-@mcp.tool
-async def delete_scheduled_transaction(
-    ctx: Context,
+async def _delete_scheduled(
+    app: AppContext,
+    budget_id: str,
     scheduled_transaction_id: str,
-    budget_id_or_name: str = "last-used",
 ) -> str:
-    """Delete a YNAB scheduled transaction.
-
-    Sends a DELETE request for the specified scheduled transaction
-    and returns a confirmation with the deleted transaction's key fields.
+    """Delete a scheduled transaction.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        scheduled_transaction_id: The scheduled transaction UUID to delete.
-        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        app: The application context with client.
+        budget_id: Resolved budget UUID.
+        scheduled_transaction_id: The scheduled transaction UUID.
 
     Returns:
         Confirmation text with deleted scheduled transaction details.
+    """
+    data = await app.client.delete(
+        f"/budgets/{budget_id}/scheduled_transactions/{scheduled_transaction_id}",
+    )
+    txn = data["scheduled_transaction"]
+    return _format_scheduled_transaction_confirmation("deleted", txn)
+
+
+@mcp.tool
+async def manage_scheduled_transactions(  # noqa: PLR0913, PLR0917
+    ctx: Context,
+    action: Literal["list", "get", "create", "update", "delete"],
+    budget_id_or_name: str = "last-used",
+    scheduled_transaction_id: str | None = None,
+    account_id: str | None = None,
+    date: str | None = None,
+    amount: float | None = None,
+    frequency: str | None = None,
+    payee_name: str | None = None,
+    payee_id: str | None = None,
+    category_id: str | None = None,
+    memo: str | None = None,
+    flag_color: str | None = None,
+) -> str:
+    """Manage YNAB scheduled transactions: list, get, create, update, delete.
+
+    Dispatches to the appropriate action based on the ``action`` parameter.
+
+    Actions:
+        list: List all scheduled transactions (excludes deleted).
+            Params: budget_id_or_name.
+        get: Get full detail for a scheduled transaction.
+            Params: budget_id_or_name, scheduled_transaction_id (required).
+        create: Create a new scheduled transaction.
+            Params: budget_id_or_name, account_id (required), date (required),
+            amount, frequency, payee_name, payee_id, category_id, memo,
+            flag_color.
+        update: Update an existing scheduled transaction.
+            Params: budget_id_or_name, scheduled_transaction_id (required),
+            plus any optional fields to change.
+        delete: Delete a scheduled transaction.
+            Params: budget_id_or_name, scheduled_transaction_id (required).
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        action: The operation to perform.
+        budget_id_or_name: Budget UUID or name. Defaults to "last-used".
+        scheduled_transaction_id: Scheduled transaction UUID (required for
+            get, update, delete).
+        account_id: Account UUID (required for create).
+        date: Scheduled transaction date as ISO string (required for create).
+        amount: Amount in dollars (converted to YNAB milliunits).
+        frequency: Recurrence frequency (never, daily, weekly, everyOtherWeek,
+            twiceAMonth, every4Weeks, monthly, everyOtherMonth,
+            every3Months, every4Months, twiceAYear, yearly,
+            everyOtherYear).
+        payee_name: Payee display name.
+        payee_id: Payee UUID.
+        category_id: Category UUID.
+        memo: Scheduled transaction memo.
+        flag_color: Flag color for the scheduled transaction.
+
+    Returns:
+        Structured text with the requested scheduled transaction data.
+
+    Raises:
+        ToolError: If required parameters for the action are missing.
     """
     app: AppContext = ctx.lifespan_context
     budget_id, _info = await resolve_budget(
         app.client, budget_id_or_name, cache=app.cache
     )
 
-    data = await app.client.delete(
-        f"/budgets/{budget_id}/scheduled_transactions/{scheduled_transaction_id}",
-    )
-    txn = data["scheduled_transaction"]
-    return _format_scheduled_transaction_confirmation("deleted", txn)
+    if action == "list":
+        return await _list_scheduled(app, budget_id)
+
+    if action == "get":
+        if scheduled_transaction_id is None:
+            msg = "action='get' requires 'scheduled_transaction_id'"
+            raise ToolError(msg)
+        return await _get_scheduled(app, budget_id, scheduled_transaction_id)
+
+    if action == "create":
+        return await _create_scheduled(
+            app,
+            budget_id,
+            account_id,
+            date,
+            amount,
+            frequency,
+            payee_name,
+            payee_id,
+            category_id,
+            memo,
+            flag_color,
+        )
+
+    if action == "update":
+        if scheduled_transaction_id is None:
+            msg = "action='update' requires 'scheduled_transaction_id'"
+            raise ToolError(msg)
+        return await _update_scheduled(
+            app,
+            budget_id,
+            scheduled_transaction_id,
+            account_id,
+            date,
+            amount,
+            frequency,
+            payee_name,
+            payee_id,
+            category_id,
+            memo,
+            flag_color,
+        )
+
+    # Last action: delete
+    if scheduled_transaction_id is None:
+        msg = "action='delete' requires 'scheduled_transaction_id'"
+        raise ToolError(msg)
+    return await _delete_scheduled(app, budget_id, scheduled_transaction_id)

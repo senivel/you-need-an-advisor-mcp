@@ -1,14 +1,9 @@
-"""Tests for scheduled transaction tools: list, get, manage, delete."""
+"""Tests for consolidated manage_scheduled_transactions tool."""
 
 import pytest
 from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.scheduled import (
-    delete_scheduled_transaction,
-    get_scheduled_transaction,
-    list_scheduled_transactions,
-    manage_scheduled_transaction,
-)
+from ynab_mcp.tools.scheduled import manage_scheduled_transactions
 
 
 def _make_scheduled_transaction(  # noqa: PLR0913
@@ -31,11 +26,7 @@ def _make_scheduled_transaction(  # noqa: PLR0913
     subtransactions=None,
     deleted=False,
 ):
-    """Build a sample scheduled transaction dict matching YNAB API shape.
-
-    Returns:
-        Dict with scheduled transaction fields.
-    """
+    """Build a sample scheduled transaction dict matching YNAB API shape."""
     return {
         "id": st_id,
         "date_first": date_first,
@@ -57,12 +48,11 @@ def _make_scheduled_transaction(  # noqa: PLR0913
     }
 
 
-class TestListScheduledTransactions:
-    """Tests for list_scheduled_transactions tool."""
+class TestManageScheduledList:
+    """Tests for manage_scheduled_transactions action='list'."""
 
     @pytest.mark.anyio
     async def test_list_returns_count_and_formatted_lines(self, mock_ctx, mocker):
-        """Count header with date_next|payee|amount|category [frequency]."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -88,7 +78,7 @@ class TestListScheduledTransactions:
             ],
         }
 
-        result = await list_scheduled_transactions(mock_ctx)
+        result = await manage_scheduled_transactions(mock_ctx, action="list")
 
         assert "2 scheduled transactions found:" in result
         assert "2026-04-15" in result
@@ -102,7 +92,6 @@ class TestListScheduledTransactions:
 
     @pytest.mark.anyio
     async def test_list_excludes_deleted(self, mock_ctx, mocker):
-        """Deleted scheduled transactions are excluded from listing."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -114,7 +103,7 @@ class TestListScheduledTransactions:
             ],
         }
 
-        result = await list_scheduled_transactions(mock_ctx)
+        result = await manage_scheduled_transactions(mock_ctx, action="list")
 
         assert "1 scheduled transaction found:" in result
         assert "st-001" in result
@@ -122,7 +111,6 @@ class TestListScheduledTransactions:
 
     @pytest.mark.anyio
     async def test_list_uses_date_first_when_no_date_next(self, mock_ctx, mocker):
-        """Falls back to date_first when date_next is None."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -137,13 +125,12 @@ class TestListScheduledTransactions:
             ],
         }
 
-        result = await list_scheduled_transactions(mock_ctx)
+        result = await manage_scheduled_transactions(mock_ctx, action="list")
 
         assert "2026-01-15" in result
 
     @pytest.mark.anyio
     async def test_list_empty(self, mock_ctx, mocker):
-        """Empty result returns appropriate message."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -152,17 +139,16 @@ class TestListScheduledTransactions:
             "scheduled_transactions": [],
         }
 
-        result = await list_scheduled_transactions(mock_ctx)
+        result = await manage_scheduled_transactions(mock_ctx, action="list")
 
         assert result == "No scheduled transactions found."
 
 
-class TestGetScheduledTransaction:
-    """Tests for get_scheduled_transaction tool."""
+class TestManageScheduledGet:
+    """Tests for manage_scheduled_transactions action='get'."""
 
     @pytest.mark.anyio
     async def test_full_detail(self, mock_ctx, mocker):
-        """Returns full detail with frequency, first date, next date."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -182,8 +168,8 @@ class TestGetScheduledTransaction:
             ),
         }
 
-        result = await get_scheduled_transaction(
-            mock_ctx, scheduled_transaction_id="st-001"
+        result = await manage_scheduled_transactions(
+            mock_ctx, action="get", scheduled_transaction_id="st-001"
         )
 
         assert "Scheduled: Electric Company" in result
@@ -199,7 +185,6 @@ class TestGetScheduledTransaction:
 
     @pytest.mark.anyio
     async def test_subtransactions(self, mock_ctx, mocker):
-        """Shows subtransactions as indented list."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -212,17 +197,13 @@ class TestGetScheduledTransaction:
                         "category_name": "Utilities",
                         "memo": "Electric",
                     },
-                    {
-                        "amount": -40.00,
-                        "category_name": "Utilities",
-                        "memo": None,
-                    },
+                    {"amount": -40.00, "category_name": "Utilities", "memo": None},
                 ],
             ),
         }
 
-        result = await get_scheduled_transaction(
-            mock_ctx, scheduled_transaction_id="st-001"
+        result = await manage_scheduled_transactions(
+            mock_ctx, action="get", scheduled_transaction_id="st-001"
         )
 
         assert "Split (2 items):" in result
@@ -232,30 +213,36 @@ class TestGetScheduledTransaction:
 
     @pytest.mark.anyio
     async def test_no_date_next(self, mock_ctx, mocker):
-        """Omits next date line when date_next is None."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
         mock_ctx.lifespan_context.client.get.return_value = {
-            "scheduled_transaction": _make_scheduled_transaction(
-                date_next=None,
-            ),
+            "scheduled_transaction": _make_scheduled_transaction(date_next=None),
         }
 
-        result = await get_scheduled_transaction(
-            mock_ctx, scheduled_transaction_id="st-001"
+        result = await manage_scheduled_transactions(
+            mock_ctx, action="get", scheduled_transaction_id="st-001"
         )
 
         assert "Next date:" not in result
 
+    @pytest.mark.anyio
+    async def test_get_without_id_raises(self, mock_ctx, mocker):
+        mocker.patch(
+            "ynab_mcp.tools.scheduled.resolve_budget",
+            return_value=("budget-123", None),
+        )
 
-class TestManageScheduledTransaction:
-    """Tests for manage_scheduled_transaction tool (create/update)."""
+        with pytest.raises(ToolError, match="scheduled_transaction_id"):
+            await manage_scheduled_transactions(mock_ctx, action="get")
+
+
+class TestManageScheduledCreate:
+    """Tests for manage_scheduled_transactions action='create'."""
 
     @pytest.mark.anyio
     async def test_create_sends_post(self, mock_ctx, mocker):
-        """Create mode (no scheduled_transaction_id) POSTs with required fields."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -271,8 +258,9 @@ class TestManageScheduledTransaction:
             ),
         }
 
-        result = await manage_scheduled_transaction(
+        result = await manage_scheduled_transactions(
             mock_ctx,
+            action="create",
             budget_id_or_name="budget-123",
             account_id="acct-111",
             date="2026-04-01",
@@ -292,50 +280,22 @@ class TestManageScheduledTransaction:
 
     @pytest.mark.anyio
     async def test_create_missing_required_raises(self, mock_ctx, mocker):
-        """Create mode missing account_id or date raises ToolError."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
         )
 
         with pytest.raises(ToolError, match="account_id"):
-            await manage_scheduled_transaction(
+            await manage_scheduled_transactions(
                 mock_ctx,
+                action="create",
                 budget_id_or_name="budget-123",
                 date="2026-04-01",
                 amount=-100.00,
             )
 
     @pytest.mark.anyio
-    async def test_update_sends_put(self, mock_ctx, mocker):
-        """Update mode (with scheduled_transaction_id) sends PUT."""
-        mocker.patch(
-            "ynab_mcp.tools.scheduled.resolve_budget",
-            return_value=("budget-123", None),
-        )
-        mock_ctx.lifespan_context.client.put.return_value = {
-            "scheduled_transaction": _make_scheduled_transaction(
-                st_id="st-001",
-                memo="Updated memo",
-            ),
-        }
-
-        result = await manage_scheduled_transaction(
-            mock_ctx,
-            budget_id_or_name="budget-123",
-            scheduled_transaction_id="st-001",
-            memo="Updated memo",
-        )
-
-        call_args = mock_ctx.lifespan_context.client.put.call_args
-        assert "/scheduled_transactions/st-001" in call_args[0][0]
-        body = call_args[1]["json"]["scheduled_transaction"]
-        assert body["memo"] == "Updated memo"
-        assert "updated" in result.lower()
-
-    @pytest.mark.anyio
     async def test_create_returns_confirmation(self, mock_ctx, mocker):
-        """Create returns confirmation with payee, amount, frequency."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -350,8 +310,9 @@ class TestManageScheduledTransaction:
             ),
         }
 
-        result = await manage_scheduled_transaction(
+        result = await manage_scheduled_transactions(
             mock_ctx,
+            action="create",
             budget_id_or_name="budget-123",
             account_id="acct-111",
             date="2026-04-01",
@@ -365,12 +326,53 @@ class TestManageScheduledTransaction:
         assert "monthly" in result
 
 
-class TestDeleteScheduledTransaction:
-    """Tests for delete_scheduled_transaction tool."""
+class TestManageScheduledUpdate:
+    """Tests for manage_scheduled_transactions action='update'."""
+
+    @pytest.mark.anyio
+    async def test_update_sends_put(self, mock_ctx, mocker):
+        mocker.patch(
+            "ynab_mcp.tools.scheduled.resolve_budget",
+            return_value=("budget-123", None),
+        )
+        mock_ctx.lifespan_context.client.put.return_value = {
+            "scheduled_transaction": _make_scheduled_transaction(
+                st_id="st-001", memo="Updated memo"
+            ),
+        }
+
+        result = await manage_scheduled_transactions(
+            mock_ctx,
+            action="update",
+            budget_id_or_name="budget-123",
+            scheduled_transaction_id="st-001",
+            memo="Updated memo",
+        )
+
+        call_args = mock_ctx.lifespan_context.client.put.call_args
+        assert "/scheduled_transactions/st-001" in call_args[0][0]
+        body = call_args[1]["json"]["scheduled_transaction"]
+        assert body["memo"] == "Updated memo"
+        assert "updated" in result.lower()
+
+    @pytest.mark.anyio
+    async def test_update_without_id_raises(self, mock_ctx, mocker):
+        mocker.patch(
+            "ynab_mcp.tools.scheduled.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="scheduled_transaction_id"):
+            await manage_scheduled_transactions(
+                mock_ctx, action="update", memo="some memo"
+            )
+
+
+class TestManageScheduledDelete:
+    """Tests for manage_scheduled_transactions action='delete'."""
 
     @pytest.mark.anyio
     async def test_delete_sends_delete(self, mock_ctx, mocker):
-        """delete_scheduled_transaction sends DELETE and returns confirmation."""
         mocker.patch(
             "ynab_mcp.tools.scheduled.resolve_budget",
             return_value=("budget-123", None),
@@ -384,8 +386,8 @@ class TestDeleteScheduledTransaction:
             ),
         }
 
-        result = await delete_scheduled_transaction(
-            mock_ctx, scheduled_transaction_id="st-001"
+        result = await manage_scheduled_transactions(
+            mock_ctx, action="delete", scheduled_transaction_id="st-001"
         )
 
         call_args = mock_ctx.lifespan_context.client.delete.call_args
@@ -393,3 +395,13 @@ class TestDeleteScheduledTransaction:
         assert "deleted" in result.lower()
         assert "Electric Company" in result
         assert "-$100.00" in result
+
+    @pytest.mark.anyio
+    async def test_delete_without_id_raises(self, mock_ctx, mocker):
+        mocker.patch(
+            "ynab_mcp.tools.scheduled.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="scheduled_transaction_id"):
+            await manage_scheduled_transactions(mock_ctx, action="delete")

@@ -1,13 +1,9 @@
-"""Tests for month and money movement tools (MNTH-01 through MNTH-06)."""
+"""Tests for consolidated manage_months tool."""
 
 import pytest
+from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.months import (
-    get_month,
-    list_money_movement_groups,
-    list_money_movements,
-    list_months,
-)
+from ynab_mcp.tools.months import manage_months
 
 
 def _make_month_summary(  # noqa: PLR0913
@@ -20,11 +16,7 @@ def _make_month_summary(  # noqa: PLR0913
     age_of_money=45,
     deleted=False,
 ):
-    """Build a sample month summary dict matching YNAB API shape.
-
-    Returns:
-        Dict with month summary fields.
-    """
+    """Build a sample month summary dict matching YNAB API shape."""
     return {
         "month": month,
         "income": income,
@@ -46,11 +38,7 @@ def _make_month_detail(  # noqa: PLR0913
     age_of_money=45,
     categories=None,
 ):
-    """Build a sample month detail dict matching YNAB API shape.
-
-    Returns:
-        Dict with month detail fields including categories.
-    """
+    """Build a sample month detail dict matching YNAB API shape."""
     if categories is None:
         categories = [
             {
@@ -106,11 +94,7 @@ def _make_money_movement(
     spent=-350.0,
     income=0.0,
 ):
-    """Build a sample money movement dict matching YNAB API shape.
-
-    Returns:
-        Dict with money movement fields.
-    """
+    """Build a sample money movement dict matching YNAB API shape."""
     return {
         "category_name": category_name,
         "category_group_name": category_group_name,
@@ -127,11 +111,7 @@ def _make_money_movement_group(
     spent=-800.0,
     income=0.0,
 ):
-    """Build a sample money movement group dict matching YNAB API shape.
-
-    Returns:
-        Dict with money movement group fields.
-    """
+    """Build a sample money movement group dict matching YNAB API shape."""
     return {
         "category_group_name": category_group_name,
         "allocation": allocation,
@@ -140,8 +120,8 @@ def _make_money_movement_group(
     }
 
 
-class TestListMonths:
-    """Tests for list_months tool (MNTH-01)."""
+class TestManageMonthsList:
+    """Tests for manage_months action='list'."""
 
     @pytest.mark.anyio
     async def test_returns_months_with_count_header(self, mock_ctx, mocker):
@@ -155,7 +135,7 @@ class TestListMonths:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"months": months}
 
-        result = await list_months(mock_ctx)
+        result = await manage_months(mock_ctx, action="list")
 
         assert "2 months found:" in result
         assert "2026-03-01" in result
@@ -176,7 +156,7 @@ class TestListMonths:
         ]
         mock_ctx.lifespan_context.client.get.return_value = {"months": months}
 
-        result = await list_months(mock_ctx)
+        result = await manage_months(mock_ctx, action="list")
 
         assert "1 month found:" in result
         assert "2026-03-01" in result
@@ -191,7 +171,7 @@ class TestListMonths:
         months = [_make_month_summary(age_of_money=None)]
         mock_ctx.lifespan_context.client.get.return_value = {"months": months}
 
-        result = await list_months(mock_ctx)
+        result = await manage_months(mock_ctx, action="list")
 
         assert "days" not in result
 
@@ -203,13 +183,13 @@ class TestListMonths:
         )
         mock_ctx.lifespan_context.client.get.return_value = {"months": []}
 
-        result = await list_months(mock_ctx)
+        result = await manage_months(mock_ctx, action="list")
 
         assert result == "No months found."
 
 
-class TestGetMonth:
-    """Tests for get_month tool (MNTH-02)."""
+class TestManageMonthsGet:
+    """Tests for manage_months action='get'."""
 
     @pytest.mark.anyio
     async def test_returns_month_detail_with_grouped_categories(self, mock_ctx, mocker):
@@ -220,12 +200,10 @@ class TestGetMonth:
         detail = _make_month_detail()
         mock_ctx.lifespan_context.client.get.return_value = {"month": detail}
 
-        result = await get_month(mock_ctx, month="2026-03")
+        result = await manage_months(mock_ctx, action="get", month="2026-03")
 
-        # Month summary
         assert "$5,000.00" in result
         assert "45 days" in result
-        # Categories grouped by group name
         assert "Bills" in result
         assert "Rent" in result
         assert "Electric" in result
@@ -241,16 +219,14 @@ class TestGetMonth:
         detail = _make_month_detail()
         mock_ctx.lifespan_context.client.get.return_value = {"month": detail}
 
-        result = await get_month(mock_ctx, month="2026-03")
+        result = await manage_months(mock_ctx, action="get", month="2026-03")
 
-        # Bills group should appear before its categories
         bills_pos = result.index("Bills")
         rent_pos = result.index("Rent")
         electric_pos = result.index("Electric")
         assert bills_pos < rent_pos
         assert bills_pos < electric_pos
 
-        # Fun Money group should appear before its categories
         fun_pos = result.index("Fun Money")
         dining_pos = result.index("Dining Out")
         assert fun_pos < dining_pos
@@ -264,18 +240,27 @@ class TestGetMonth:
         detail = _make_month_detail()
         mock_ctx.lifespan_context.client.get.return_value = {"month": detail}
 
-        await get_month(mock_ctx, month="2026-03")
+        await manage_months(mock_ctx, action="get", month="2026-03")
 
         call_args = mock_ctx.lifespan_context.client.get.call_args
         assert "2026-03-01" in call_args[0][0]
 
+    @pytest.mark.anyio
+    async def test_get_without_month_raises(self, mock_ctx, mocker):
+        mocker.patch(
+            "ynab_mcp.tools.months.resolve_budget",
+            return_value=("budget-1", {}),
+        )
 
-class TestListMoneyMovements:
-    """Tests for list_money_movements tool (MNTH-03, MNTH-04)."""
+        with pytest.raises(ToolError, match="month"):
+            await manage_months(mock_ctx, action="get")
+
+
+class TestManageMonthsListMoneyMovements:
+    """Tests for manage_months action='list_money_movements'."""
 
     @pytest.mark.anyio
     async def test_budget_wide(self, mock_ctx, mocker):
-        """MNTH-03: GET /budgets/{id}/money_movements."""
         mocker.patch(
             "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
@@ -283,26 +268,26 @@ class TestListMoneyMovements:
         movements = [
             _make_money_movement(category_name="Groceries", allocation=500.0),
             _make_money_movement(
-                category_name="Gas", category_group_name="Transport", allocation=200.0
+                category_name="Gas",
+                category_group_name="Transport",
+                allocation=200.0,
             ),
         ]
         mock_ctx.lifespan_context.client.get.return_value = {
             "money_movements": movements,
         }
 
-        result = await list_money_movements(mock_ctx)
+        result = await manage_months(mock_ctx, action="list_money_movements")
 
         assert "2 money movements found:" in result
         assert "Groceries" in result
         assert "Gas" in result
         assert "$500.00" in result
-        # Verify budget-wide endpoint
         call_args = mock_ctx.lifespan_context.client.get.call_args
         assert call_args[0][0] == "/budgets/budget-1/money_movements"
 
     @pytest.mark.anyio
     async def test_by_month(self, mock_ctx, mocker):
-        """MNTH-04: GET /budgets/{id}/months/{month}/money_movements."""
         mocker.patch(
             "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
@@ -312,7 +297,9 @@ class TestListMoneyMovements:
             "money_movements": movements,
         }
 
-        result = await list_money_movements(mock_ctx, month="2026-03")
+        result = await manage_months(
+            mock_ctx, action="list_money_movements", month="2026-03"
+        )
 
         assert "1 money movement found:" in result
         call_args = mock_ctx.lifespan_context.client.get.call_args
@@ -328,7 +315,7 @@ class TestListMoneyMovements:
             "money_movements": [],
         }
 
-        result = await list_money_movements(mock_ctx)
+        result = await manage_months(mock_ctx, action="list_money_movements")
 
         assert result == "No money movements found."
 
@@ -348,17 +335,16 @@ class TestListMoneyMovements:
             "money_movements": movements,
         }
 
-        result = await list_money_movements(mock_ctx)
+        result = await manage_months(mock_ctx, action="list_money_movements")
 
         assert "Everyday Expenses" in result
 
 
-class TestListMoneyMovementGroups:
-    """Tests for list_money_movement_groups tool (MNTH-05, MNTH-06)."""
+class TestManageMonthsListMoneyMovementGroups:
+    """Tests for manage_months action='list_money_movement_groups'."""
 
     @pytest.mark.anyio
     async def test_budget_wide(self, mock_ctx, mocker):
-        """MNTH-05: GET /budgets/{id}/money_movement_groups."""
         mocker.patch(
             "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
@@ -371,7 +357,7 @@ class TestListMoneyMovementGroups:
             "money_movement_groups": groups,
         }
 
-        result = await list_money_movement_groups(mock_ctx)
+        result = await manage_months(mock_ctx, action="list_money_movement_groups")
 
         assert "2 money movement groups found:" in result
         assert "Bills" in result
@@ -382,7 +368,6 @@ class TestListMoneyMovementGroups:
 
     @pytest.mark.anyio
     async def test_by_month(self, mock_ctx, mocker):
-        """MNTH-06: GET /budgets/{id}/months/{month}/money_movement_groups."""
         mocker.patch(
             "ynab_mcp.tools.months.resolve_budget",
             return_value=("budget-1", {}),
@@ -392,7 +377,9 @@ class TestListMoneyMovementGroups:
             "money_movement_groups": groups,
         }
 
-        result = await list_money_movement_groups(mock_ctx, month="2026-03")
+        result = await manage_months(
+            mock_ctx, action="list_money_movement_groups", month="2026-03"
+        )
 
         assert "1 money movement group found:" in result
         call_args = mock_ctx.lifespan_context.client.get.call_args
@@ -411,6 +398,6 @@ class TestListMoneyMovementGroups:
             "money_movement_groups": [],
         }
 
-        result = await list_money_movement_groups(mock_ctx)
+        result = await manage_months(mock_ctx, action="list_money_movement_groups")
 
         assert result == "No money movement groups found."
