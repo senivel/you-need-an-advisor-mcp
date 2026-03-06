@@ -1,26 +1,22 @@
 """Budget tools: list budgets, get budget detail, get user info."""
 
+from typing import Literal
+
 from fastmcp import Context
 
 from ynab_mcp.app import AppContext, mcp
 from ynab_mcp.budget_resolver import resolve_budget
 
 
-@mcp.tool
-async def list_budgets(ctx: Context) -> str:
+async def _list_budgets(app: AppContext) -> str:
     """List all available YNAB budgets.
 
-    Returns a count header followed by a structured list of budget
-    names, IDs, and last modified dates.
-
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
+        app: The application context with client and cache.
 
     Returns:
-        Structured text with count header and budget details,
-        or "No budgets found." if none exist.
+        Structured text with count header and budget details.
     """
-    app: AppContext = ctx.lifespan_context
     data = await app.client.get("/budgets")
     budgets = data["budgets"]
 
@@ -37,29 +33,21 @@ async def list_budgets(ctx: Context) -> str:
     return "\n".join(lines)
 
 
-@mcp.tool
-async def get_budget(
-    ctx: Context,
-    budget_id_or_name: str | None = None,
+async def _get_budget(
+    app: AppContext,
+    budget_id: str,
+    info: str | None,
 ) -> str:
     """Get detailed information about a YNAB budget.
 
-    Fetches budget details and settings (date format, currency format)
-    in a single response. Uses budget resolution to find the budget
-    by UUID or fuzzy name match.
-
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
-        budget_id_or_name: Budget UUID or name. Auto-resolves if only
-            one budget exists.
+        app: The application context with client and cache.
+        budget_id: Resolved budget UUID.
+        info: Optional info message from budget resolution.
 
     Returns:
-        Structured text with budget name, months, date format, and
-        currency format.
+        Structured text with budget details and settings.
     """
-    app: AppContext = ctx.lifespan_context
-    budget_id, info = await resolve_budget(app.client, budget_id_or_name)
-
     data = await app.client.get(f"/budgets/{budget_id}")
     budget = data["budget"]
 
@@ -84,17 +72,49 @@ async def get_budget(
     return result
 
 
-@mcp.tool
-async def get_user(ctx: Context) -> str:
+async def _get_user(app: AppContext) -> str:
     """Get the authenticated YNAB user's information.
 
     Args:
-        ctx: The MCP context providing access to lifespan dependencies.
+        app: The application context with client and cache.
 
     Returns:
         Structured text with the user ID.
     """
-    app: AppContext = ctx.lifespan_context
     data = await app.client.get("/user")
     user = data["user"]
     return f"User ID: {user['id']}"
+
+
+@mcp.tool
+async def manage_budgets(
+    ctx: Context,
+    action: Literal["list", "get", "get_user"],
+    budget_id_or_name: str | None = None,
+) -> str:
+    """Manage YNAB budgets: list all, get details, or get user info.
+
+    Actions:
+        list: List all budgets. No extra params needed.
+        get: Get budget details. Uses budget_id_or_name.
+        get_user: Get authenticated user info. No extra params needed.
+
+    Args:
+        ctx: The MCP context providing access to lifespan dependencies.
+        action: The operation to perform.
+        budget_id_or_name: Budget UUID or name (get only). Auto-resolves
+            if only one budget exists.
+
+    Returns:
+        Structured text with budget or user information.
+    """
+    app: AppContext = ctx.lifespan_context
+
+    if action == "list":
+        return await _list_budgets(app)
+
+    if action == "get":
+        budget_id, info = await resolve_budget(app.client, budget_id_or_name)
+        return await _get_budget(app, budget_id, info)
+
+    return await _get_user(app)

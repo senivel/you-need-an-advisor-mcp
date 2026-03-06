@@ -1,8 +1,9 @@
-"""Tests for account tools: get_accounts, get_account, create_account."""
+"""Tests for manage_accounts consolidated tool."""
 
 import pytest
+from fastmcp.exceptions import ToolError
 
-from ynab_mcp.tools.accounts import create_account, get_account, get_accounts
+from ynab_mcp.tools.accounts import manage_accounts
 
 
 def _make_account(  # noqa: PLR0913
@@ -39,8 +40,8 @@ def _make_account(  # noqa: PLR0913
     }
 
 
-class TestGetAccounts:
-    """Tests for get_accounts tool."""
+class TestManageAccountsList:
+    """Tests for manage_accounts(action='list')."""
 
     @pytest.mark.anyio
     async def test_list_accounts(self, mock_ctx, mocker):
@@ -61,7 +62,7 @@ class TestGetAccounts:
             ],
         }
 
-        result = await get_accounts(mock_ctx)
+        result = await manage_accounts(mock_ctx, action="list")
 
         assert "2 accounts found:" in result
         assert "Checking" in result
@@ -87,7 +88,7 @@ class TestGetAccounts:
             ],
         }
 
-        result = await get_accounts(mock_ctx)
+        result = await manage_accounts(mock_ctx, action="list")
 
         assert "1 account found:" in result
         assert "Open Account" in result
@@ -109,7 +110,7 @@ class TestGetAccounts:
             ],
         }
 
-        result = await get_accounts(mock_ctx, include_closed=True)
+        result = await manage_accounts(mock_ctx, action="list", include_closed=True)
 
         assert "2 accounts found:" in result
         assert "Open Account" in result
@@ -127,7 +128,7 @@ class TestGetAccounts:
             "accounts": [],
         }
 
-        result = await get_accounts(mock_ctx)
+        result = await manage_accounts(mock_ctx, action="list")
 
         assert result == "No accounts found."
 
@@ -144,7 +145,7 @@ class TestGetAccounts:
             ],
         }
 
-        result = await get_accounts(mock_ctx)
+        result = await manage_accounts(mock_ctx, action="list")
 
         assert result == "No open accounts found."
 
@@ -161,13 +162,13 @@ class TestGetAccounts:
             ],
         }
 
-        result = await get_accounts(mock_ctx)
+        result = await manage_accounts(mock_ctx, action="list")
 
         assert result.startswith("Using budget 'My Budget' (only budget found)")
 
 
-class TestGetAccount:
-    """Tests for get_account tool."""
+class TestManageAccountsGet:
+    """Tests for manage_accounts(action='get')."""
 
     @pytest.mark.anyio
     async def test_get_account(self, mock_ctx, mocker):
@@ -188,7 +189,7 @@ class TestGetAccount:
             ),
         }
 
-        result = await get_account(mock_ctx, account_id="acct-111")
+        result = await manage_accounts(mock_ctx, action="get", account_id="acct-111")
 
         assert "Checking" in result
         assert "Type: checking" in result
@@ -210,7 +211,7 @@ class TestGetAccount:
             "account": _make_account(note=None),
         }
 
-        result = await get_account(mock_ctx, account_id="acct-111")
+        result = await manage_accounts(mock_ctx, action="get", account_id="acct-111")
 
         assert "Note:" not in result
 
@@ -225,13 +226,24 @@ class TestGetAccount:
             "account": _make_account(),
         }
 
-        result = await get_account(mock_ctx, account_id="acct-111")
+        result = await manage_accounts(mock_ctx, action="get", account_id="acct-111")
 
         assert result.startswith("Using budget 'My Budget' (only budget found)")
 
+    @pytest.mark.anyio
+    async def test_get_account_missing_id_raises(self, mock_ctx, mocker):
+        """ToolError raised when account_id is missing for get action."""
+        mocker.patch(
+            "ynab_mcp.tools.accounts.resolve_budget",
+            return_value=("budget-123", None),
+        )
 
-class TestCreateAccount:
-    """Tests for create_account tool."""
+        with pytest.raises(ToolError, match="account_id is required"):
+            await manage_accounts(mock_ctx, action="get")
+
+
+class TestManageAccountsCreate:
+    """Tests for manage_accounts(action='create')."""
 
     @pytest.mark.anyio
     async def test_create_account(self, mock_ctx, mocker):
@@ -249,8 +261,9 @@ class TestCreateAccount:
             ),
         }
 
-        result = await create_account(
+        result = await manage_accounts(
             mock_ctx,
+            action="create",
             name="New Savings",
             account_type="savings",
             balance=500.0,
@@ -290,8 +303,9 @@ class TestCreateAccount:
             ),
         }
 
-        await create_account(
+        await manage_accounts(
             mock_ctx,
+            action="create",
             name="Checking",
             account_type="checking",
             balance=100.50,
@@ -315,11 +329,23 @@ class TestCreateAccount:
             "account": _make_account(account_id="acct-new-777"),
         }
 
-        result = await create_account(
+        result = await manage_accounts(
             mock_ctx,
+            action="create",
             name="Checking",
             account_type="checking",
             balance=0.0,
         )
 
         assert result.startswith("Using budget 'My Budget' (only budget found)")
+
+    @pytest.mark.anyio
+    async def test_create_account_missing_params_raises(self, mock_ctx, mocker):
+        """ToolError raised when required create params are missing."""
+        mocker.patch(
+            "ynab_mcp.tools.accounts.resolve_budget",
+            return_value=("budget-123", None),
+        )
+
+        with pytest.raises(ToolError, match="name, account_type, and balance"):
+            await manage_accounts(mock_ctx, action="create", name="Test")

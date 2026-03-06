@@ -1,8 +1,8 @@
-"""Tests for budget tools: list_budgets, get_budget, get_user."""
+"""Tests for manage_budgets consolidated tool."""
 
 import pytest
 
-from ynab_mcp.tools.budgets import get_budget, get_user, list_budgets
+from ynab_mcp.tools.budgets import manage_budgets
 
 
 def _make_budget_get_side_effect():
@@ -32,8 +32,8 @@ def _make_budget_get_side_effect():
     return fake_get
 
 
-class TestListBudgets:
-    """Tests for list_budgets tool."""
+class TestManageBudgetsList:
+    """Tests for manage_budgets(action='list')."""
 
     @pytest.mark.anyio
     async def test_returns_count_header_and_budget_list(self, mock_ctx):
@@ -56,7 +56,7 @@ class TestListBudgets:
             ]
         }
 
-        result = await list_budgets(mock_ctx)
+        result = await manage_budgets(mock_ctx, action="list")
 
         assert "2 budgets found:" in result
         assert "My Budget" in result
@@ -68,13 +68,13 @@ class TestListBudgets:
     async def test_empty_budgets(self, mock_ctx):
         mock_ctx.lifespan_context.client.get.return_value = {"budgets": []}
 
-        result = await list_budgets(mock_ctx)
+        result = await manage_budgets(mock_ctx, action="list")
 
         assert result == "No budgets found."
 
 
-class TestGetBudget:
-    """Tests for get_budget tool."""
+class TestManageBudgetsGet:
+    """Tests for manage_budgets(action='get')."""
 
     @pytest.mark.anyio
     async def test_returns_budget_detail_with_settings(self, mock_ctx, mocker):
@@ -85,7 +85,7 @@ class TestGetBudget:
         mock_client = mock_ctx.lifespan_context.client
         mock_client.get.side_effect = _make_budget_get_side_effect()
 
-        result = await get_budget(mock_ctx)
+        result = await manage_budgets(mock_ctx, action="get")
 
         assert "My Budget" in result
         assert "2024-01-01" in result
@@ -105,7 +105,7 @@ class TestGetBudget:
         mock_client = mock_ctx.lifespan_context.client
         mock_client.get.side_effect = _make_budget_get_side_effect()
 
-        result = await get_budget(mock_ctx)
+        result = await manage_budgets(mock_ctx, action="get")
 
         assert result.startswith("Using budget 'My Budget' (only budget found)")
 
@@ -118,13 +118,13 @@ class TestGetBudget:
         mock_client = mock_ctx.lifespan_context.client
         mock_client.get.side_effect = _make_budget_get_side_effect()
 
-        await get_budget(mock_ctx, budget_id_or_name="My Budget")
+        await manage_budgets(mock_ctx, action="get", budget_id_or_name="My Budget")
 
         mock_resolve.assert_called_once_with(mock_client, "My Budget")
 
 
-class TestGetUser:
-    """Tests for get_user tool."""
+class TestManageBudgetsGetUser:
+    """Tests for manage_budgets(action='get_user')."""
 
     @pytest.mark.anyio
     async def test_returns_user_id(self, mock_ctx):
@@ -134,7 +134,7 @@ class TestGetUser:
             }
         }
 
-        result = await get_user(mock_ctx)
+        result = await manage_budgets(mock_ctx, action="get_user")
 
         assert "user-abc-123" in result
         assert "User ID" in result
