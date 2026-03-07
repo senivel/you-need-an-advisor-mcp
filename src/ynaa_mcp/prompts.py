@@ -34,6 +34,34 @@ def resolve_step() -> str:
     return '1. Use the `manage_budgets` tool with action="list" to find the budget ID.'
 
 
+def prepend_resolve_step(template: str) -> str:
+    """Prepend the budget resolution step and renumber existing steps.
+
+    When no budget_id is provided, the template needs a step 1 that
+    instructs the LLM to resolve the budget ID first, with all
+    existing steps renumbered starting from 2.
+
+    Args:
+        template: The formatted template text (with {budget_id} still
+            as a literal placeholder).
+
+    Returns:
+        Template text with resolve step prepended and steps renumbered.
+    """
+    resolve = resolve_step()
+    lines = template.split("\n")
+    header = lines[0]
+    steps: list[str] = []
+    for line in lines[1:]:
+        if line and line[0].isdigit():
+            dot_idx = line.index(".")
+            old_num = int(line[:dot_idx])
+            steps.append(f"{old_num + 1}{line[dot_idx:]}")
+        else:
+            steps.append(line)
+    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
+
+
 @mcp.prompt()
 def review_monthly_spending(
     month: str,
@@ -54,22 +82,9 @@ def review_monthly_spending(
     """
     if budget_id:
         return REVIEW_SPENDING_TEMPLATE.format(budget_id=budget_id, month=month)
-
-    resolve = resolve_step()
-    body = REVIEW_SPENDING_TEMPLATE.format(budget_id="{budget_id}", month=month)
-    # Insert resolve step after the header line
-    lines = body.split("\n")
-    header = lines[0]
-    # Renumber steps: existing steps start at 1, shift to start at 2
-    steps: list[str] = []
-    for line in lines[1:]:
-        if line and line[0].isdigit():
-            dot_idx = line.index(".")
-            old_num = int(line[:dot_idx])
-            steps.append(f"{old_num + 1}{line[dot_idx:]}")
-        else:
-            steps.append(line)
-    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
+    return prepend_resolve_step(
+        REVIEW_SPENDING_TEMPLATE.format(budget_id="{budget_id}", month=month),
+    )
 
 
 @mcp.prompt()
@@ -88,20 +103,9 @@ def enter_transactions(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return ENTER_TRANSACTIONS_TEMPLATE.format(budget_id=budget_id)
-
-    resolve = resolve_step()
-    body = ENTER_TRANSACTIONS_TEMPLATE.format(budget_id="{budget_id}")
-    lines = body.split("\n")
-    header = lines[0]
-    steps: list[str] = []
-    for line in lines[1:]:
-        if line and line[0].isdigit():
-            dot_idx = line.index(".")
-            old_num = int(line[:dot_idx])
-            steps.append(f"{old_num + 1}{line[dot_idx:]}")
-        else:
-            steps.append(line)
-    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
+    return prepend_resolve_step(
+        ENTER_TRANSACTIONS_TEMPLATE.format(budget_id="{budget_id}"),
+    )
 
 
 @mcp.prompt()
@@ -120,17 +124,6 @@ def budget_health_check(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return BUDGET_HEALTH_TEMPLATE.format(budget_id=budget_id)
-
-    resolve = resolve_step()
-    body = BUDGET_HEALTH_TEMPLATE.format(budget_id="{budget_id}")
-    lines = body.split("\n")
-    header = lines[0]
-    steps: list[str] = []
-    for line in lines[1:]:
-        if line and line[0].isdigit():
-            dot_idx = line.index(".")
-            old_num = int(line[:dot_idx])
-            steps.append(f"{old_num + 1}{line[dot_idx:]}")
-        else:
-            steps.append(line)
-    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
+    return prepend_resolve_step(
+        BUDGET_HEALTH_TEMPLATE.format(budget_id="{budget_id}"),
+    )

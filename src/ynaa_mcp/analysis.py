@@ -11,7 +11,7 @@ subpackage via importlib.resources.
 from importlib import resources as pkg_resources
 
 from ynaa_mcp.app import mcp
-from ynaa_mcp.prompts import resolve_step
+from ynaa_mcp.prompts import prepend_resolve_step
 
 
 _templates = pkg_resources.files("ynaa_mcp.templates.analysis")
@@ -36,34 +36,6 @@ INCOME_ALLOCATION_TEMPLATE = _templates.joinpath(
 ).read_text(encoding="utf-8")
 
 
-def _prepend_resolve_step(template: str) -> str:
-    """Prepend the budget resolution step and renumber existing steps.
-
-    When no budget_id is provided, the template needs a step 1 that
-    instructs the LLM to resolve the budget ID first, with all
-    existing steps renumbered starting from 2.
-
-    Args:
-        template: The formatted template text (with {budget_id} still
-            as a literal placeholder).
-
-    Returns:
-        Template text with resolve step prepended and steps renumbered.
-    """
-    resolve = resolve_step()
-    lines = template.split("\n")
-    header = lines[0]
-    steps: list[str] = []
-    for line in lines[1:]:
-        if line and line[0].isdigit():
-            dot_idx = line.index(".")
-            old_num = int(line[:dot_idx])
-            steps.append(f"{old_num + 1}{line[dot_idx:]}")
-        else:
-            steps.append(line)
-    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
-
-
 @mcp.prompt()
 def budget_health_analysis(budget_id: str | None = None) -> str:
     """Comprehensive budget health assessment.
@@ -81,7 +53,7 @@ def budget_health_analysis(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return BUDGET_HEALTH_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         BUDGET_HEALTH_TEMPLATE.format(budget_id="{budget_id}"),
     )
 
@@ -103,7 +75,7 @@ def spending_trends(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return SPENDING_TRENDS_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         SPENDING_TRENDS_TEMPLATE.format(budget_id="{budget_id}"),
     )
 
@@ -125,7 +97,7 @@ def budget_setup_advisor(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return BUDGET_SETUP_ADVISOR_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         BUDGET_SETUP_ADVISOR_TEMPLATE.format(budget_id="{budget_id}"),
     )
 
@@ -147,7 +119,7 @@ def debt_payoff_planner(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return DEBT_PAYOFF_PLANNER_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         DEBT_PAYOFF_PLANNER_TEMPLATE.format(budget_id="{budget_id}"),
     )
 
@@ -169,7 +141,7 @@ def savings_goal_tracker(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return SAVINGS_GOAL_TRACKER_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         SAVINGS_GOAL_TRACKER_TEMPLATE.format(budget_id="{budget_id}"),
     )
 
@@ -191,6 +163,6 @@ def income_allocation(budget_id: str | None = None) -> str:
     """
     if budget_id:
         return INCOME_ALLOCATION_TEMPLATE.format(budget_id=budget_id)
-    return _prepend_resolve_step(
+    return prepend_resolve_step(
         INCOME_ALLOCATION_TEMPLATE.format(budget_id="{budget_id}"),
     )

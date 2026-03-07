@@ -11,7 +11,7 @@ subpackage via importlib.resources.
 from importlib import resources as pkg_resources
 
 from ynaa_mcp.app import mcp
-from ynaa_mcp.prompts import resolve_step
+from ynaa_mcp.prompts import prepend_resolve_step
 
 
 _templates = pkg_resources.files("ynaa_mcp.templates.workflows")
@@ -48,20 +48,7 @@ def _format_with_resolve(template: str, budget_id: str | None) -> str:
     """
     if budget_id:
         return template.format(budget_id=budget_id)
-
-    resolve = resolve_step()
-    body = template.format(budget_id="{budget_id}")
-    lines = body.split("\n")
-    header = lines[0]
-    steps: list[str] = []
-    for line in lines[1:]:
-        if line and line[0].isdigit():
-            dot_idx = line.index(".")
-            old_num = int(line[:dot_idx])
-            steps.append(f"{old_num + 1}{line[dot_idx:]}")
-        else:
-            steps.append(line)
-    return f"{header}\n\n{resolve}\n" + "\n".join(steps)
+    return prepend_resolve_step(template.format(budget_id="{budget_id}"))
 
 
 @mcp.prompt()
