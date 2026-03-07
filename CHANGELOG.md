@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.0...v1.1.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* **ci:** exclude CHANGELOG.md from prettier formatting ([f16199d](https://github.com/senivel/you-need-an-advisor-mcp/commit/f16199d6045b8a39191b376db305f6fa90fdb849))
+* **ci:** set empty component to simplify release-please PR branch name ([7ad5479](https://github.com/senivel/you-need-an-advisor-mcp/commit/7ad54790a0154f4ef6de369b5c32ea023c632e9b))
+* **ci:** update uv.lock in release-please PR to prevent stale lockfile ([cfe3198](https://github.com/senivel/you-need-an-advisor-mcp/commit/cfe319829f65ff8851e16f80945335e64bdb3c6c))
+
 ## [1.1.0](https://github.com/senivel/you-need-an-advisor-mcp/compare/you-need-an-advisor-mcp-v1.0.0...you-need-an-advisor-mcp-v1.1.0) (2026-03-07)
 
 
