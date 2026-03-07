@@ -38,3 +38,45 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget) -- your AI-powe
 
 - `src/ynaa_mcp/` — main package (src layout)
 - `pyproject.toml` — all tool config (ruff, pytest, coverage) lives here
+
+## Architecture
+
+- `app.py` creates `AppContext` (client + cache) via `lifespan()` — tools access it with `app = cast("AppContext", ctx.lifespan_context)`
+- `server.py` imports tool modules for side effects only (decorator self-registration) — these imports are one-way; tool modules import from `app`, never the reverse
+- All API calls go through `YNABClient` which handles rate limiting, envelope unwrapping, milliunit conversion, and delta caching transparently
+
+## Adding New Tools
+
+- Follow the consolidated action pattern: one `@mcp.tool()` per domain with `action: Literal["list", "get", "create", ...]` dispatch
+- Always call `resolve_budget(app.client, budget_id_or_name, cache=app.cache)` for budget-aware tools
+- Return structured plain text with indentation, not JSON — use `format_dollars()` for money display
+- Import and register in `server.py` via side-effect import
+
+## Milliunit Handling
+
+- YNAB API uses milliunits (1000 = $1.00) — `YNABClient` auto-converts known fields on read via `MILLIUNIT_FIELDS`
+- For write operations, use `dollars_to_milliunits()` from `converters.py` (uses `Decimal` internally to avoid float precision issues)
+- Display money with `format_dollars()` — never format manually
+
+## Output Formatting
+
+- All tools return structured plain text, not JSON
+- 2-space indentation for hierarchy
+- Counts in headers (e.g., "5 categories found:")
+- Status indicators: `[C]`/`[U]`/`[R]` for cleared/uncleared/reconciled
+
+## Cache Cross-Invalidation
+
+- Mutating transactions invalidates accounts and categories caches
+- Mutating categories invalidates months cache
+- New mutation tools must respect these rules in `cache.py`
+
+## Template Patterns
+
+- Prompt/workflow templates live in `src/ynaa_mcp/templates/`
+- Loaded via `importlib.resources` at module level
+- Tool references in templates are validated by `tests/test_template_refs.py` — action values must match tool `Literal` types
+
+## Async Test Marker
+
+- Add `@pytest.mark.anyio` to all async test functions (not `@pytest.mark.asyncio`)
