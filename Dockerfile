@@ -10,7 +10,7 @@ COPY pyproject.toml uv.lock ./
 
 # Install dependencies (without the project itself)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-install-project --no-dev --no-editable
+    uv sync --frozen --no-install-project --no-dev --no-editable
 
 # Copy source and metadata
 COPY src/ src/
@@ -18,7 +18,7 @@ COPY README.md LICENSE ./
 
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev --no-editable
+    uv sync --frozen --no-dev --no-editable
 
 # Stage 2: Production image
 FROM python:3.13-slim
