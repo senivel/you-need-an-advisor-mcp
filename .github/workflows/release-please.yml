@@ -13,5 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release-please
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Update uv.lock when release-please creates/updates a PR
+      - if: steps.release-please.outputs.pr
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ fromJSON(steps.release-please.outputs.pr).headBranchName }}
+
+      - if: steps.release-please.outputs.pr
+        uses: astral-sh/setup-uv@v5
+
+      - if: steps.release-please.outputs.pr
+        run: uv lock
+
+      - if: steps.release-please.outputs.pr
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git diff --staged --quiet || (git commit -m "chore: update uv.lock" && git push)
