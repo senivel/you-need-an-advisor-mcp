@@ -7,7 +7,6 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants li
 [![PyPI](https://img.shields.io/pypi/v/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
 [![Python](https://img.shields.io/pypi/pyversions/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
 [![License](https://img.shields.io/pypi/l/you-need-an-advisor-mcp)](LICENSE)
-[![Downloads](https://img.shields.io/pypi/dm/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
 
 [![CI](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/ci.yml)
 [![Docs](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/docs.yml/badge.svg)](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/docs.yml)
