@@ -4,8 +4,15 @@
 
 An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants like Claude to your [YNAB](https://www.ynab.com/) budget. Ask questions about your finances in natural language and get answers backed by real data from the YNAB API, informed by YNAB's budgeting methodology.
 
-![Python 3.13+](https://img.shields.io/badge/python-3.13%2B-blue)
-![License: MIT](https://img.shields.io/badge/license-MIT-green)
+[![PyPI](https://img.shields.io/pypi/v/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
+[![Python](https://img.shields.io/pypi/pyversions/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
+[![License](https://img.shields.io/pypi/l/you-need-an-advisor-mcp)](LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/you-need-an-advisor-mcp)](https://pypi.org/project/you-need-an-advisor-mcp/)
+
+[![CI](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/ci.yml)
+[![Docs](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/docs.yml/badge.svg)](https://github.com/senivel/you-need-an-advisor-mcp/actions/workflows/docs.yml)
+[![Pyright](https://img.shields.io/badge/pyright-strict-blue)](https://microsoft.github.io/pyright/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
 
 ## Features
 
