@@ -23,4 +23,5 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_tools: "Bash(uv run pytest),Bash(uv run ruff check .),Read"
+          claude_args: |
+            --allowedTools "Bash(uv run pytest),Bash(uv run ruff check .),Read"
