@@ -1,6 +1,6 @@
 """YNAB MCP server -- Model Context Protocol server for You Need A Budget."""
 
-__version__ = "1.0.0"  # x-release-please-version
+__version__ = "1.1.0"  # x-release-please-version
 
 from ynaa_mcp.app import AppContext, mcp
 from ynaa_mcp.budget_resolver import resolve_budget

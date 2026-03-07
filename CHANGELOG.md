@@ -1,0 +1,92 @@
+# Changelog
+
+## [1.1.0](https://github.com/senivel/you-need-an-advisor-mcp/compare/you-need-an-advisor-mcp-v1.0.0...you-need-an-advisor-mcp-v1.1.0) (2026-03-07)
+
+
+### Features
+
+* **0.5-01:** migrate accounts, budgets, cache, payees to tools/ modules ([4f55a03](https://github.com/senivel/you-need-an-advisor-mcp/commit/4f55a03523e1d4df950e32e06fe8039c7b0119a6))
+* **0.5-02:** migrate remaining tool modules and slim server.py to wiring-only ([5a8a470](https://github.com/senivel/you-need-an-advisor-mcp/commit/5a8a47048bb4a8fb9faab0addc637de5a157e7a1))
+* **01-01:** add error handling module with dependencies ([eaf2cd0](https://github.com/senivel/you-need-an-advisor-mcp/commit/eaf2cd0b27ac90e5670f289fba3189d089656638))
+* **01-01:** add milliunit converters, Pydantic models, package exports ([bbc0b67](https://github.com/senivel/you-need-an-advisor-mcp/commit/bbc0b6750c8e6dbd7bef75b0e7ab471d0e1ce4ba))
+* **01-01:** add TTL caching to CacheStore and wire into budget_resolver ([8603bdd](https://github.com/senivel/you-need-an-advisor-mcp/commit/8603bddfe0b9fe3dde0174dcd044f06324f54436))
+* **01-01:** create __main__.py entry point and [project.scripts] config ([e9285b7](https://github.com/senivel/you-need-an-advisor-mcp/commit/e9285b756b900e266552ebb07245c1a7e8c11bda))
+* **01-02:** consolidate accounts and budgets into action-parameter tools ([1dec312](https://github.com/senivel/you-need-an-advisor-mcp/commit/1dec312e1fcff02eb740a22adf5ee29753293051))
+* **01-02:** consolidate categories and payees into action-parameter tools ([494a121](https://github.com/senivel/you-need-an-advisor-mcp/commit/494a1211f124e45c50fe937c59ced026f60d655e))
+* **01-02:** implement sliding window rate limiter ([69dbd6c](https://github.com/senivel/you-need-an-advisor-mcp/commit/69dbd6c192a4bb19cd57972fd7d158d0b135ab34))
+* **01-02:** implement YNABClient with auth, rate limiting, and conversion ([422f51a](https://github.com/senivel/you-need-an-advisor-mcp/commit/422f51ab7db102dd564018dfe352191af25779a6))
+* **01-03:** budget resolver with auto-selection and fuzzy matching ([480a53e](https://github.com/senivel/you-need-an-advisor-mcp/commit/480a53e3dd60bb73a02c7c3e9c0341c95f448ad0))
+* **01-03:** consolidate months and scheduled transactions into action-parameter tools ([efb94ca](https://github.com/senivel/you-need-an-advisor-mcp/commit/efb94ca6e006223ce5ae9980a5dec5d00b4dc1a8))
+* **01-03:** consolidate transactions module to single manage_transactions tool ([71cc3cf](https://github.com/senivel/you-need-an-advisor-mcp/commit/71cc3cf26ea4eaa4b075148a1af05d2a77f52f3c))
+* **01-03:** FastMCP server with lifespan, PAT validation, and list_budgets tool ([7cd2046](https://github.com/senivel/you-need-an-advisor-mcp/commit/7cd2046625d6a48d1c7bf3463caf52f1ae7e82dd))
+* **01-04:** fix all pyright strict mode errors across source files ([590b18d](https://github.com/senivel/you-need-an-advisor-mcp/commit/590b18d55c3918e611ede1f4323a36bc679dbffc))
+* **02-01:** add models, helpers, and client.patch() ([f2bc5d0](https://github.com/senivel/you-need-an-advisor-mcp/commit/f2bc5d0b5238195a8872858729a014851a09df12))
+* **02-01:** implement budget tools (list_budgets, get_budget, get_user) ([bb932ff](https://github.com/senivel/you-need-an-advisor-mcp/commit/bb932ff388229df385ea8f9c5d8da38ed73ca880))
+* **02-02:** implement create_account tool with dollar-to-milliunit conversion ([5b3e9a2](https://github.com/senivel/you-need-an-advisor-mcp/commit/5b3e9a270253645a237585d440be7056b519fc61))
+* **02-02:** implement get_accounts and get_account tools ([17af879](https://github.com/senivel/you-need-an-advisor-mcp/commit/17af879002d52f91e94f9c901041aa9fd159d32a))
+* **02-03:** implement get_categories and get_category tools ([b44775d](https://github.com/senivel/you-need-an-advisor-mcp/commit/b44775dd8f1a2a7c0d181e6806776be6527de8f7))
+* **02-03:** implement manage_category and manage_category_group tools ([9070eed](https://github.com/senivel/you-need-an-advisor-mcp/commit/9070eed21805521b3597e8c97cf482f44e451cbc))
+* **02-03:** implement month_category_budget tool ([fb8f3cd](https://github.com/senivel/you-need-an-advisor-mcp/commit/fb8f3cd7975361808ebb1b60b0b35ea2810d3bcc))
+* **02-04:** add ID fields to get_accounts and get_categories output ([33deec3](https://github.com/senivel/you-need-an-advisor-mcp/commit/33deec388fe4b7307b52d53b4ac0e1ec57630f4d))
+* **03-01:** add put() and delete() methods to YNABClient ([00f4a80](https://github.com/senivel/you-need-an-advisor-mcp/commit/00f4a806251b5f31f3ecfe82c9a99e3aa08aedb8))
+* **03-01:** add TransactionDetail and SubTransaction Pydantic models ([a88d460](https://github.com/senivel/you-need-an-advisor-mcp/commit/a88d46073ed9e955da9a5013c3cc0c483bbd8f3d))
+* **03-01:** author terminology, credit cards, and goals methodology content ([fb8da2d](https://github.com/senivel/you-need-an-advisor-mcp/commit/fb8da2dc2bbe505483c960efceac9440b8f1c893))
+* **03-01:** create knowledge module infrastructure with tests ([f66b5d8](https://github.com/senivel/you-need-an-advisor-mcp/commit/f66b5d823e055e4bb07f8467735eb154ec7924cd))
+* **03-02:** add get_transaction tool with detail view and subtransactions ([5d4e590](https://github.com/senivel/you-need-an-advisor-mcp/commit/5d4e5907eb7b6e983df220e3a0514936e6ff7465))
+* **03-02:** add list_transactions tool with endpoint routing and filtering ([660aba7](https://github.com/senivel/you-need-an-advisor-mcp/commit/660aba74efe64e7276636a19e45484469a04014c))
+* **03-02:** author overspending and reconciliation methodology content ([6efafa6](https://github.com/senivel/you-need-an-advisor-mcp/commit/6efafa6bc56c6f09cc2ff42a713c272e3b104a7d))
+* **03-03:** implement batch create/update and import transaction tools ([4682e87](https://github.com/senivel/you-need-an-advisor-mcp/commit/4682e87ae81a03effa2f8c525cf930f08ffb3e02))
+* **03-03:** implement manage_transaction and delete_transaction tools ([f247063](https://github.com/senivel/you-need-an-advisor-mcp/commit/f2470630bbc80bbf76c06cdbeeb49d9ccb053e17))
+* **04-01:** create templates package and migrate prompts to .md files ([45fbfec](https://github.com/senivel/you-need-an-advisor-mcp/commit/45fbfecb0a12f7c3109fdfeb44f71af1b01bf434))
+* **04-01:** implement scheduled transaction tools ([a91ffd5](https://github.com/senivel/you-need-an-advisor-mcp/commit/a91ffd5b33ac706db9fea5b0ab295d02cbdef27c))
+* **04-01:** refactor prompts.py to load from .md templates ([4e8ed35](https://github.com/senivel/you-need-an-advisor-mcp/commit/4e8ed35f1d57cf86af62a2cf6d4481ffc80c5deb))
+* **04-02:** implement 5 payee tools with list, get, update, and location support ([c624e4f](https://github.com/senivel/you-need-an-advisor-mcp/commit/c624e4fdde5c0fb7a1fd3fe28b2cbf2b9ae30cd0))
+* **04-02:** implement 6 analysis prompt templates and analysis module ([af6131e](https://github.com/senivel/you-need-an-advisor-mcp/commit/af6131e09c0d7bb99a396c2e15ad6f912ca6f2b0))
+* **04-03:** implement 6 workflow guide prompts with templates ([aaac384](https://github.com/senivel/you-need-an-advisor-mcp/commit/aaac3847ffdcbb433cac28b5bfe164730eb28f47))
+* **04-03:** implement month and money movement tools ([a0425bb](https://github.com/senivel/you-need-an-advisor-mcp/commit/a0425bbf017f969221a78e1019b87c2b59b31f11))
+* **04-04:** create cross-cutting template reference validation tests ([7c90cd3](https://github.com/senivel/you-need-an-advisor-mcp/commit/7c90cd32ed5d9c7a52e6ae81cdee68022cbfd456))
+* **04-04:** wire workflows module into server.py ([42c3f57](https://github.com/senivel/you-need-an-advisor-mcp/commit/42c3f5792b3086718fa90c896534f7bf4c0c9cec))
+* **05-01:** implement CacheStore with delta merging and invalidation ([9bbedd4](https://github.com/senivel/you-need-an-advisor-mcp/commit/9bbedd42135b074a80562e31a8c175f0fc694b48))
+* **05-01:** integrate delta cache into YNABClient and AppContext ([77a2cd6](https://github.com/senivel/you-need-an-advisor-mcp/commit/77a2cd67fbae34ea24b9268f4d91692cd526ab7f))
+* **05-01:** restructure docs site layout with YNAB brand theme ([01a7a68](https://github.com/senivel/you-need-an-advisor-mcp/commit/01a7a6844f0f21c08c59bed42731019deebedf71))
+* **05-01:** rewrite configuration page with complete env var and client setup docs ([3b3a897](https://github.com/senivel/you-need-an-advisor-mcp/commit/3b3a8977f27c209052e437355c3219b9a2652220))
+* **05-02:** implement MCP Prompt templates for YNAB workflows ([d86db5d](https://github.com/senivel/you-need-an-advisor-mcp/commit/d86db5d196ffe786f3cd60e02a6f73e2ff4b4423))
+* **05-02:** implement MCP Resources for budget structure ([a04dc30](https://github.com/senivel/you-need-an-advisor-mcp/commit/a04dc30255bd38f73ef9a7c112056cfac34d9887))
+* **05-02:** write all 8 tool domain documentation pages ([e583343](https://github.com/senivel/you-need-an-advisor-mcp/commit/e5833432c2900b6a9d0f0a1bde60a797db750be7))
+* **05-02:** write Getting Started supplementary pages ([3b184c2](https://github.com/senivel/you-need-an-advisor-mcp/commit/3b184c2854eab2dfb83982b1d52de4f0628b0115))
+* **05-03:** write API reference and internals pages with mkdocstrings ([b79c6e8](https://github.com/senivel/you-need-an-advisor-mcp/commit/b79c6e8de5b9a981a72d7f8c3a3814d399f78ca4))
+* **05-03:** write prompts and resources documentation pages ([53210ed](https://github.com/senivel/you-need-an-advisor-mcp/commit/53210ed4bf7a8879b47f6493228327959de8de3d))
+* **05-04:** write home page, update getting-started, finalize contributing and changelog and README ([bb7abba](https://github.com/senivel/you-need-an-advisor-mcp/commit/bb7abbad43d23eb09649ebc6f25ceeae7c145860))
+* **06-01:** add __version__ with release-please marker ([6a1f8dc](https://github.com/senivel/you-need-an-advisor-mcp/commit/6a1f8dca42a162b82b9b847375bafcc1fcc915c7))
+* **06-01:** add CI workflow and release-please infrastructure ([8467f1c](https://github.com/senivel/you-need-an-advisor-mcp/commit/8467f1ca98c72a14438742a0715a40b8189f6906))
+* **06-02:** add Dockerfile and .dockerignore for container distribution ([3e1196e](https://github.com/senivel/you-need-an-advisor-mcp/commit/3e1196e527770f7737aa4ee8e359c86db84b52c2))
+* **06-02:** add docs deployment workflow with mike versioning ([48b36d1](https://github.com/senivel/you-need-an-advisor-mcp/commit/48b36d1eb55df1dd59e19d4245c1e4b642b5d24f))
+* **06-03:** add publish workflow for PyPI and Docker on tag ([8a7bd7c](https://github.com/senivel/you-need-an-advisor-mcp/commit/8a7bd7c269d6dc390f0fa7bbe5307ccbd0291aa6))
+* **06-03:** add repo templates, Claude PR review, and Docker README ([65c887c](https://github.com/senivel/you-need-an-advisor-mcp/commit/65c887c96e94121f4ae17ec8cca9702a7983964c))
+* **07-01:** create home page and Getting Started documentation ([afe3407](https://github.com/senivel/you-need-an-advisor-mcp/commit/afe340785c28c1c018d38f8073ed7c868509731d))
+* **07-02:** add gateway README and MIT LICENSE ([e01dfe9](https://github.com/senivel/you-need-an-advisor-mcp/commit/e01dfe9942206e71063f2b75a979965f80719783))
+* **07-02:** sync pyproject.toml version to 1.0.0 and wire release-please ([3c9afa4](https://github.com/senivel/you-need-an-advisor-mcp/commit/3c9afa4c60b7d586d4534e92eb0c33bbd1b5bd35))
+* **07-03:** add contributing guide, changelog, and license page ([f4690c8](https://github.com/senivel/you-need-an-advisor-mcp/commit/f4690c8b66a8fb2d46e73142623fab24879f68e1))
+* **07-03:** replace placeholder docs with full tools reference and architecture content ([50da0ef](https://github.com/senivel/you-need-an-advisor-mcp/commit/50da0ef3317d05569ce676335715343ecbd84730))
+* **quick-1:** rename project from ynab-mcp to you-need-an-advisor-mcp ([305e6de](https://github.com/senivel/you-need-an-advisor-mcp/commit/305e6de3f437f0982bdb9766bb8bb1ec502410b6))
+
+
+### Bug Fixes
+
+* **01-01:** wire cache kwarg into payees and categories resolve_budget calls ([fc733fb](https://github.com/senivel/you-need-an-advisor-mcp/commit/fc733fb96479b9748cbd4f5c35eef59f5c99e1ff))
+* **07-01:** replace all invalid create_category action refs with create ([0a552f9](https://github.com/senivel/you-need-an-advisor-mcp/commit/0a552f96963ae63cf58ee406ccbbc7b541821c29))
+* **07:** correct env var name in README quickstart (YNAB_PAT not YNAB_API_TOKEN) ([ec85355](https://github.com/senivel/you-need-an-advisor-mcp/commit/ec853552a1156e7b6eee8c58f13ad67b04e4ff8d))
+* **ci:** replace pre-commit/action with direct command ([da3a74e](https://github.com/senivel/you-need-an-advisor-mcp/commit/da3a74ecd76e31377127241d8ccdc1416cd977cd))
+* **docs:** add pymdownx.emoji extension for Material icon rendering ([1ed267a](https://github.com/senivel/you-need-an-advisor-mcp/commit/1ed267a9ac80eec2dcbec5af10d2582b9018fe3b))
+* remove depracted ruff rule PD901 ([759a1c0](https://github.com/senivel/you-need-an-advisor-mcp/commit/759a1c05306d2fc9826f7ae1848a201f7581ed8e))
+* resolve pyright strict mode errors and clean up dead code ([7acea19](https://github.com/senivel/you-need-an-advisor-mcp/commit/7acea19649cc1b7a254d1e0b8d97c0ece254194a))
+
+
+### Reverts
+
+* remove SHA-pinned actions in favor of version tags ([164e5ab](https://github.com/senivel/you-need-an-advisor-mcp/commit/164e5ab72dd8818b69db461609d995ac6a610c66))
+
+
+### Documentation
+
+* prefer Context7 MCP over web search for documentation lookups ([20b4786](https://github.com/senivel/you-need-an-advisor-mcp/commit/20b47861facf7a5ad6f9a126477381d8e5a24665))
