@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.3](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.2...v1.1.3) (2026-03-07)
+
+
+### Bug Fixes
+
+* **docs:** use pepy.tech for downloads badge instead of shields.io ([fbf16fe](https://github.com/senivel/you-need-an-advisor-mcp/commit/fbf16fec22169fb89f3518d58817f33a45882448))
+
+
+### Documentation
+
+* replace static badges with dynamic PyPI and CI badges ([488d260](https://github.com/senivel/you-need-an-advisor-mcp/commit/488d260b012399b874a6b60f56df55bb8f451d67))
+
 ## [1.1.2](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.1...v1.1.2) (2026-03-07)
 
 
