@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.2](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.1...v1.1.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* **ci:** add id-token permission for Claude PR review OIDC auth ([bc81932](https://github.com/senivel/you-need-an-advisor-mcp/commit/bc81932b448278e0503772beebb3717140f88751))
+* **ci:** migrate deprecated allowed_tools to claude_args in PR review ([b99da7c](https://github.com/senivel/you-need-an-advisor-mcp/commit/b99da7ce5e6634c4aca366e82872e73a2eaddd88))
+* **ci:** pass app token to checkout step in release-please workflow ([b64b52f](https://github.com/senivel/you-need-an-advisor-mcp/commit/b64b52f992102b4d4eb172e1a5e7cf65df0aa6f4))
+* **ci:** use GitHub App token in release-please to trigger publish workflow ([8b8addb](https://github.com/senivel/you-need-an-advisor-mcp/commit/8b8addb196a43eb34a4527334ab7c09af50ad92e))
+* **docker:** use --frozen instead of --locked to prevent stale lockfile failures ([f687cd1](https://github.com/senivel/you-need-an-advisor-mcp/commit/f687cd1a8f3894a3c4bb78c9bd7a5bf42e315382))
+
 ## [1.1.1](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.0...v1.1.1) (2026-03-07)
 
 
