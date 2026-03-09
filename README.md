@@ -33,7 +33,7 @@ An [MCP](https://modelcontextprotocol.io/) server that connects AI assistants li
   "mcpServers": {
     "ynab": {
       "command": "uvx",
-      "args": ["you-need-an-advisor-mcp"],
+      "args": ["--from", "you-need-an-advisor-mcp", "ynaa-mcp"],
       "env": {
         "YNAB_PAT": "your-token-here"
       }

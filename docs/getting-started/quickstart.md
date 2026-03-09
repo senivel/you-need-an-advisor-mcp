@@ -13,7 +13,7 @@ Once you have a [YNAB Personal Access Token](installation.md#get-a-ynab-personal
       "mcpServers": {
         "ynab": {
           "command": "uvx",
-          "args": ["you-need-an-advisor-mcp"],
+          "args": ["--from", "you-need-an-advisor-mcp", "ynaa-mcp"],
           "env": {
             "YNAB_PAT": "your-personal-access-token"
           }
@@ -31,7 +31,7 @@ Once you have a [YNAB Personal Access Token](installation.md#get-a-ynab-personal
     Run the server with your token as an environment variable:
 
     ```bash
-    YNAB_PAT=your-personal-access-token uvx you-need-an-advisor-mcp
+    YNAB_PAT=your-personal-access-token uvx --from you-need-an-advisor-mcp ynaa-mcp
     ```
 
     Point your MCP client at the running server using its stdio transport.

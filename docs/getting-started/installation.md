@@ -24,7 +24,7 @@
     Run directly without installing -- the simplest option:
 
     ```bash
-    uvx you-need-an-advisor-mcp
+    uvx --from you-need-an-advisor-mcp ynaa-mcp
     ```
 
     This downloads and runs the latest version in an isolated environment. No project setup needed.

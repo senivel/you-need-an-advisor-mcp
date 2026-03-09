@@ -1,4 +1,4 @@
-"""Entry point for ``python -m ynaa_mcp`` and ``uvx ynab-mcp``."""
+"""Entry point for ``python -m ynaa_mcp`` and ``uvx --from you-need-an-advisor-mcp ynaa-mcp``."""
 
 from ynaa_mcp.server import mcp
 

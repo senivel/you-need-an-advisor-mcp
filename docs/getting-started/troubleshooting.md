@@ -19,7 +19,7 @@ Running into issues? This page covers the most common problems and how to fix th
           "mcpServers": {
             "ynab": {
               "command": "uvx",
-              "args": ["you-need-an-advisor-mcp"],
+              "args": ["--from", "you-need-an-advisor-mcp", "ynaa-mcp"],
               "env": {
                 "YNAB_PAT": "your-token-here"
               }
@@ -138,7 +138,7 @@ Running into issues? This page covers the most common problems and how to fix th
 
     3. **Try running the server manually** to see if it starts:
        ```bash
-       uvx you-need-an-advisor-mcp
+       uvx --from you-need-an-advisor-mcp ynaa-mcp
        ```
        If this errors, the issue is with the server installation, not the client config.
 

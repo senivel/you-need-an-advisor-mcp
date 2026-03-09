@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 - **Tool consolidation** -- Reduced from 30+ individual tools to 8 consolidated tools (`manage_budgets`, `manage_accounts`, `manage_categories`, `manage_transactions`, `manage_payees`, `manage_months`, `manage_scheduled_transactions`, `manage_cache`) using action-based dispatch
 - **Modular architecture** -- Refactored monolithic `server.py` into domain-specific modules: `tools/`, `prompts.py`, `analysis.py`, `workflows.py`, `resources.py`, `knowledge.py`
-- **Entry point** -- Added `ynaa-mcp` console script via pyproject.toml for `uvx you-need-an-advisor-mcp` usage
+- **Entry point** -- Added `ynaa-mcp` console script via pyproject.toml for `uvx --from you-need-an-advisor-mcp ynaa-mcp` usage
 
 ### Improved
 
