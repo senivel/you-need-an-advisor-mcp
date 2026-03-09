@@ -1931,7 +1931,7 @@ The format is based on <a href="https://keepachangelog.com/">Keep a Changelog</a
 <ul>
 <li><strong>Tool consolidation</strong> -- Reduced from 30+ individual tools to 8 consolidated tools (<code>manage_budgets</code>, <code>manage_accounts</code>, <code>manage_categories</code>, <code>manage_transactions</code>, <code>manage_payees</code>, <code>manage_months</code>, <code>manage_scheduled_transactions</code>, <code>manage_cache</code>) using action-based dispatch</li>
 <li><strong>Modular architecture</strong> -- Refactored monolithic <code>server.py</code> into domain-specific modules: <code>tools/</code>, <code>prompts.py</code>, <code>analysis.py</code>, <code>workflows.py</code>, <code>resources.py</code>, <code>knowledge.py</code></li>
-<li><strong>Entry point</strong> -- Added <code>ynaa-mcp</code> console script via pyproject.toml for <code>uvx you-need-an-advisor-mcp</code> usage</li>
+<li><strong>Entry point</strong> -- Added <code>ynaa-mcp</code> console script via pyproject.toml for <code>uvx --from you-need-an-advisor-mcp ynaa-mcp</code> usage</li>
 </ul>
 <h3 id="improved">Improved<a class="headerlink" href="#improved" title="Permanent link">&para;</a></h3>
 <ul>
