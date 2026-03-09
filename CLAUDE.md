@@ -21,8 +21,9 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget) -- your AI-powe
 - Ruff handles both linting and formatting (not separate tools)
 - Nearly all ruff rules enabled (`select = ["ALL"]`) with specific ignores — check `pyproject.toml [tool.ruff.lint]` for the full ignore list
 - Google-style docstrings (`convention = "google"`)
-- Tests are exempt from annotation (`ANN`) and `PLR6301` rules
-- Pre-commit runs ruff lint+format and prettier (for JSON/YAML/MD) on commit
+- `ANN` (annotations) disabled project-wide — pyright strict owns type checking
+- Tests additionally exempt from `D102`, `DOC201`, `PLR2004`, `PLR6301`, `RUF069`
+- Pre-commit runs: ruff lint+format, prettier (JSON/YAML/MD), pyright type check, and standard hooks (large files, trailing whitespace, merge conflict, TOML/JSON validity). A local hook blocks `.planning/` files from commits.
 
 ## Tool Preferences
 
@@ -34,10 +35,21 @@ MCP (Model Context Protocol) server for YNAB (You Need A Budget) -- your AI-powe
 - **freezegun for wall-clock time** — use `@freeze_time` for tests involving `datetime.now()`, `date.today()`, or `time.time()`. Not applicable to `time.monotonic()` (use `mocker.patch` for monotonic).
 - **Hypothesis for property-based tests** — use `@given` with strategies for functions with well-defined input/output contracts (converters, validators, parsers). Complements example-based tests, doesn't replace them.
 
+## Environment
+
+- `YNAB_PAT` — required. YNAB Personal Access Token, validated on server startup.
+- Entry point: `ynaa-mcp` CLI (`src/ynaa_mcp/__main__.py:main`)
+
 ## Project Structure
 
 - `src/ynaa_mcp/` — main package (src layout)
-- `pyproject.toml` — all tool config (ruff, pytest, coverage) lives here
+  - `tools/` — one module per domain (accounts, transactions, categories, etc.)
+  - `templates/` — prompt/workflow/analysis templates (loaded via `importlib.resources`)
+  - `client.py` — `YNABClient` (rate limiting, envelope unwrapping, milliunit conversion, delta caching)
+  - `converters.py` — milliunit/dollar conversion, formatting helpers
+  - `cache.py` — `CacheStore` with cross-invalidation rules
+- `tests/` — mirrors `src/` structure; `conftest.py` has shared fixtures
+- `pyproject.toml` — all tool config (ruff, pytest, pyright, coverage) lives here
 
 ## Architecture
 
