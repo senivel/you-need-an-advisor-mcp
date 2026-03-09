@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.3](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.2...v1.1.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* **docs:** use correct uvx --from syntax for ynaa-mcp entry point ([eb10e52](https://github.com/senivel/you-need-an-advisor-mcp/commit/eb10e525d59e54b1247647fc274bd9131ad9124a))
+* **docs:** use pepy.tech for downloads badge instead of shields.io ([fbf16fe](https://github.com/senivel/you-need-an-advisor-mcp/commit/fbf16fec22169fb89f3518d58817f33a45882448))
+
+
+### Documentation
+
+* add architecture and convention directives to CLAUDE.md ([6faf364](https://github.com/senivel/you-need-an-advisor-mcp/commit/6faf3642604aef8e9b304d9033a787da58a1ebe1))
+* fix stale lint exemptions, add environment and expanded structure to CLAUDE.md ([6d63d07](https://github.com/senivel/you-need-an-advisor-mcp/commit/6d63d079a83114cd322aa938e7aba4951ccc20cb))
+* replace static badges with dynamic PyPI and CI badges ([488d260](https://github.com/senivel/you-need-an-advisor-mcp/commit/488d260b012399b874a6b60f56df55bb8f451d67))
+
 ## [1.1.2](https://github.com/senivel/you-need-an-advisor-mcp/compare/v1.1.1...v1.1.2) (2026-03-07)
 
 
